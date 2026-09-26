@@ -21,14 +21,19 @@ export function buildQuestions(input: {
       `The allegation is of type ${t}.`,
     ]),
   );
+  if ("state" in types) {
+    types.state =
+      "Score, lead, down and distance, quarter, or game clock of this window.";
+  }
 
   const pack: QuestionPack = {
     lineClass: {
       type: "choice",
       instructions:
-        "Classify `line.text` as one closed class. A claim alleges something about the current window of tape. A joke does not. A question asks. A report flags a person or rule break for mods. Unbound is none of those.",
+        "Classify `line.text` as one closed class. A claim alleges a fact about the current window of tape, including score, lead, down and distance, quarter, or game clock. A joke does not. A question asks. A report flags a person or rule break for mods. Unbound is none of those.",
       criteria: {
-        claim: "Alleges a fact or reading about the live window.",
+        claim:
+          "Alleges a fact or reading about the live window. Score, clock, down, quarter, and lead count.",
         joke: "Play, meme, or empty reaction with no allegation.",
         question: "Asks the streamer or room something.",
         report: "Calls for a mod, ban, or rule enforcement on a person.",
@@ -38,13 +43,13 @@ export function buildQuestions(input: {
     type: {
       type: "choice",
       instructions:
-        "If `line.text` is a claim, pick its type. If it is not a claim, still pick the closest type; compose will ignore it when class is not claim.",
+        "If `line.text` is a claim, pick its type. Score and clock are state. If it is not a claim, still pick the closest type; compose will ignore it when class is not claim.",
       criteria: types,
     },
     worthOpening: {
       type: "noul",
       instructions:
-        "Should this line open a new live reading? True only if it is a distinct allegation and none of `live[]` already holds it.",
+        "Should this line open a new live reading? True if it is a distinct allegation about this window, including score or clock, and none of `live[]` already holds it.",
       criteria: {
         true: "New allegation, not an echo of a live reading, worth a slot.",
         false: "Noise, echo, or not an allegation.",
