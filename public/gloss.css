@@ -1,0 +1,195 @@
+:root {
+  --void: #09090b;
+  --iron: #141417;
+  --plate: #1c1d21;
+  --line: #2a2b30;
+  --ink: #f3efe4;
+  --mute: #8b867a;
+  --sheen: rgba(243, 239, 228, 0.08);
+  --hold: #d4b36a;
+  --clash: #c45a5a;
+  --thin: #7a8794;
+  --bound: #7a9a80;
+  --split: #c4894a;
+  --echo: #8a7eb0;
+  --open: #a8a39a;
+  --serif: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  --sans: "Segoe UI", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: var(--void);
+  color: var(--ink);
+  font: 14px/1.45 var(--sans);
+}
+body.caption {
+  background: transparent;
+}
+
+.wordmark {
+  font: 500 11px/1 var(--sans);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.wordmark b {
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: 0.34em;
+}
+.wordmark::after {
+  content: "";
+  display: block;
+  width: 28px;
+  height: 1px;
+  margin-top: 8px;
+  background: linear-gradient(90deg, var(--ink), transparent);
+  opacity: 0.45;
+}
+
+header.mast, footer.mast {
+  padding: 18px 24px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--mute);
+}
+header.mast {
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, var(--sheen), transparent 40%),
+    var(--void);
+}
+footer.mast {
+  border-top: 1px solid var(--line);
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  min-height: calc(100vh - 104px);
+}
+.stage { padding: 24px; }
+.margin {
+  border-left: 1px solid var(--line);
+  padding: 24px;
+  background: var(--iron);
+}
+
+.card {
+  position: relative;
+  background:
+    linear-gradient(180deg, var(--sheen), transparent 28%),
+    var(--plate);
+  border: 1px solid var(--line);
+  padding: 16px 18px 16px 20px;
+  margin-bottom: 12px;
+}
+.card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--open);
+}
+.card.hold::before { background: var(--hold); }
+.card.clash::before { background: var(--clash); }
+.card.bound::before { background: var(--bound); }
+.card.thin::before { background: var(--thin); }
+.card.split::before { background: var(--split); }
+.card.echo::before { background: var(--echo); }
+.card.open::before, .card.closed::before { background: var(--open); }
+
+.mark {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.mark.hold { color: var(--hold); }
+.mark.clash { color: var(--clash); }
+.mark.thin { color: var(--thin); }
+.mark.bound { color: var(--bound); }
+.mark.split { color: var(--split); }
+.mark.echo { color: var(--echo); }
+.mark.open, .mark.closed { color: var(--open); }
+
+.label {
+  font-family: var(--serif);
+  font-size: 20px;
+  line-height: 1.28;
+  margin: 8px 0 6px;
+}
+.meta { color: var(--mute); font-size: 12px; }
+.empty {
+  color: var(--mute);
+  padding: 28px 4px;
+  letter-spacing: 0.08em;
+}
+
+.bar {
+  height: 1px;
+  background: var(--line);
+  margin-top: 12px;
+}
+.bar > i {
+  display: block;
+  height: 1px;
+  background: var(--ink);
+  opacity: 0.55;
+}
+
+h2 {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mute);
+  font-weight: 500;
+  margin: 18px 0 10px;
+}
+h2:first-child { margin-top: 0; }
+
+textarea, input[type="text"], input:not([type]), button {
+  width: 100%;
+  background: var(--void);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 9px 10px;
+  margin: 0 0 8px;
+  font: inherit;
+}
+textarea { resize: vertical; min-height: 72px; }
+button {
+  cursor: pointer;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+button:hover { border-color: var(--ink); }
+button.holdbtn {
+  width: auto;
+  margin: 12px 0 0;
+  padding: 6px 12px;
+  letter-spacing: 0.16em;
+}
+label.meta input { width: auto; margin-right: 6px; }
+
+.narrow {
+  width: 318px;
+  padding: 16px 16px 20px;
+}
+.narrow .card {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0;
+  padding: 12px 0 12px 12px;
+}
+.narrow .label { font-size: 16px; }
+
+.caption-line .label {
+  font-size: 22px;
+  margin-top: 4px;
+}
