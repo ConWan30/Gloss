@@ -8,6 +8,7 @@ import { Ledger } from "./ledger.ts";
 import { parseJsonl, postsToLines, type XPost } from "./ingest/x.ts";
 import { pulseLines } from "./ingest/run.ts";
 import { attachTape } from "./ingest/attach.ts";
+import { scoutBurst } from "./ingest/scout.ts";
 import { parseCitation, publicCitation } from "./glass.ts";
 import { extractStamp, parseQoresenceStamp } from "./cite.ts";
 import { restampLive } from "./compose/restamp.ts";
@@ -235,6 +236,20 @@ const server = createServer(async (req, res) => {
       session = applyPulse(session, line, judgment);
       ledger.save(session, line);
       json(res, 200, { ...publicView(session), lineId: line.id });
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/v1/scout") {
+      const body = await readBody(req);
+      const raw = String(body.text ?? body.burst ?? "");
+      const before = session.live.length;
+      const result = await scoutBurst(session, raw, String(body.user ?? "chat"));
+      session = result.session;
+      ledger.save(session);
+      json(res, 200, {
+        ...publicView(session),
+        scouted: result.scouted,
+        opened: Math.max(0, session.live.length - before),
+      });
       return;
     }
     if (req.method === "POST" && url.pathname === "/v1/hold") {
