@@ -13,6 +13,7 @@ import { restampLive } from "./compose/restamp.ts";
 import { judgeStatus } from "./jev/status.ts";
 import { probeJev } from "./jev/probe.ts";
 import { folioView } from "./folio.ts";
+import { captionView } from "./caption.ts";
 import { READING_TYPES, THRESHOLDS, type Line, type ReadingType, type SessionState } from "./types.ts";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -118,6 +119,11 @@ const server = createServer(async (req, res) => {
       res.end(readFileSync(join(ROOT, "public/folio.html")));
       return;
     }
+    if (req.method === "GET" && url.pathname === "/caption") {
+      res.writeHead(200, { "Content-Type": MIME[".html"] });
+      res.end(readFileSync(join(ROOT, "public/caption.html")));
+      return;
+    }
     if (req.method === "GET" && url.pathname === "/v1/rail") {
       json(res, 200, publicView(session));
       return;
@@ -125,6 +131,10 @@ const server = createServer(async (req, res) => {
     if (req.method === "GET" && url.pathname === "/v1/folio") {
       const closed = session.closedMs ? session : ledger.lastClosed();
       json(res, 200, folioView(closed));
+      return;
+    }
+    if (req.method === "GET" && url.pathname === "/v1/caption") {
+      json(res, 200, captionView(session));
       return;
     }
     if (req.method === "POST" && url.pathname === "/v1/jev/probe") {
