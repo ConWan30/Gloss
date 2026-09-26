@@ -2,47 +2,15 @@
 
 Marginal readings of the live tape.
 
-Gloss holds what the room alleges about a short window. It does not recap, score, speak in chat, or crown a reading.
+Gloss holds what the room alleges about a short window. It does not recap, speak in chat, or crown a reading.
 
-## Windows (your machine)
+First product is closed.
+
+## Windows
 
 `/home/workdir/gloss` is a sandbox path. It does not exist on your PC.
 
-Needs **Node 22+** (`node:sqlite` + type stripping).
-
-```powershell
-node -v
-cd C:\Users\Contr\Projects
-git clone https://github.com/ConWan30/Gloss.git gloss
-cd gloss
-npm test
-npm start
-```
-
-Then open http://127.0.0.1:8788/dock
-
-If `npm test` complains about `--experimental-strip-types` or `node:sqlite`, your Node is too old. Install current Node LTS 22+ from nodejs.org, open a new PowerShell, run `node -v` again.
-
-Optional live judge (server only):
-
-```powershell
-copy .env.example .env
-notepad .env
-```
-
-Set `TYPESAFE_API_KEY`. Never put that key in the dock page.
-
-```powershell
-npm run jev:probe
-```
-
-`ok: true` → restart `npm start`. Header reads `live`. Dock **Probe Jev** repeats it.
-
-Live fail-closed: dead key or timeout uses fixtures for that pulse and stamps `live-down`. Tests stay fixture.
-
-Slice 2: dock **X tape** pulses `fixtures/x-session.jsonl` through `/v1/ingest`. Posts are lines. Gloss does not post back to X.
-
-Slice 3: **Margin Glass** is off. Check it, tap `clock_ns` + `frame_seq`. Header shows `fN` or `□`. A citation is not Bound. Gloss does not write Qoresence.
+Needs **Node 22+**.
 
 ```powershell
 cd C:\Users\Contr\Projects\gloss
@@ -51,8 +19,30 @@ npm test
 npm start
 ```
 
+`npm test` stays on fixtures (`NODE_TEST_CONTEXT`). `npm start` uses live Jev when `TYPESAFE_API_KEY` is set.
+
+## Surfaces
+
+| URL | What |
+| --- | --- |
+| http://127.0.0.1:8788/dock | Operator. Pulse, window, Hold, X tape, Cite Q. |
+| http://127.0.0.1:8788/rail | Live readings. 318px. |
+| http://127.0.0.1:8788/folio | Last closed session that has readings. |
+| http://127.0.0.1:8788/caption | Held reading only. Else □. OBS Browser Source. |
+| http://127.0.0.1:8788/second | Bind to a live reading. Not a vote. |
+
+## Finish the run
+
+1. `npm run jev:probe` then `npm start`. Header `live`.
+2. Dock + rail + caption + folio open.
+3. OBS: Browser Source, URL `http://127.0.0.1:8788/caption`, width ~480, shutdown source when not visible off. Transparent page.
+4. Pulse what the room alleges. Hold only what belongs on tape.
+5. Optional Deck on `8765`. In `.env`: `GLOSS_QORESENCE_VIEW=http://127.0.0.1:8765/api/session/view`. Restart Gloss. `POST /v1/cite` with `{"pull":true}`. Loopback only. Gloss does not start Qoresence and does not write it.
+
 ## Marks
 
 Open · Bound · Thin · Split · Clash · Echo · Closed · Hold
 
-Bound requires window facts. Empty facts stay Thin or Open.
+Bound requires window facts. A citation is not Bound. Score, clock, down, and lead are claims of type `state`.
+
+Three live readings. Same post ids do not pulse twice. X tape attaches to the open session.
