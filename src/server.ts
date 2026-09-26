@@ -6,6 +6,7 @@ import { applyPulse, closeSession } from "./compose/pulse.ts";
 import { Ledger } from "./ledger.ts";
 import { parseJsonl, postsToLines, type XPost } from "./ingest/x.ts";
 import { pulseLines } from "./ingest/run.ts";
+import { attachTape } from "./ingest/attach.ts";
 import { parseCitation, publicCitation } from "./glass.ts";
 import { extractStamp, parseQoresenceStamp } from "./cite.ts";
 import { restampLive } from "./compose/restamp.ts";
@@ -252,7 +253,11 @@ const server = createServer(async (req, res) => {
       } else if (Array.isArray(body.posts)) {
         posts = body.posts as XPost[];
       }
-      session = ledger.openSession(String(body.channel ?? "x"));
+      if (attachTape(session, body) === "open") {
+        session = ledger.openSession(String(body.channel ?? session.channel ?? "x"));
+      } else if (body.channel) {
+        session = { ...session, channel: String(body.channel) };
+      }
       if (body.facts || body.streamerUtterance || body.clock_ns) {
         session = {
           ...session,
