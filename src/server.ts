@@ -7,6 +7,7 @@ import { Ledger } from "./ledger.ts";
 import { parseJsonl, postsToLines, type XPost } from "./ingest/x.ts";
 import { pulseLines } from "./ingest/run.ts";
 import { parseCitation, publicCitation } from "./glass.ts";
+import { extractStamp, parseQoresenceStamp } from "./cite.ts";
 import { restampLive } from "./compose/restamp.ts";
 import { judgeStatus } from "./jev/status.ts";
 import { probeJev } from "./jev/probe.ts";
@@ -117,6 +118,39 @@ const server = createServer(async (req, res) => {
     if (req.method === "POST" && url.pathname === "/v1/jev/probe") {
       const result = await probeJev();
       json(res, 200, { ...publicView(session), probe: result });
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/v1/cite") {
+      const body = await readBody(req);
+      let raw: unknown = body;
+      if (body.fixture === "qoresence-window") {
+        raw = JSON.parse(readFileSync(join(ROOT, "fixtures/qoresence-window.json"), "utf8"));
+      } else if (body.pull === true) {
+        const viewUrl = process.env.GLOSS_QORESENCE_VIEW ?? "";
+        if (!viewUrl.startsWith("http://127.0.0.1") && !viewUrl.startsWith("http://localhost")) {
+          json(res, 200, { ...publicView(session), cite: "no local view" });
+          return;
+        }
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 2_000);
+        try {
+          const pulled = await fetch(viewUrl, { signal: controller.signal });
+          raw = await pulled.json();
+        } catch {
+          clearTimeout(timer);
+          json(res, 200, { ...publicView(session), cite: "\u25a1" });
+          return;
+        }
+        clearTimeout(timer);
+      }
+      const citation = parseQoresenceStamp(extractStamp(raw));
+      session = {
+        ...session,
+        glass: citation ? true : session.glass,
+        window: { ...session.window, citation },
+      };
+      ledger.save(session);
+      json(res, 200, { ...publicView(session), cite: citation ? `f${citation.frame_seq}` : "\u25a1" });
       return;
     }
     if (req.method === "POST" && url.pathname === "/v1/session") {
