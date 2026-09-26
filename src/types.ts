@@ -5,6 +5,7 @@ export const READING_TYPES = [
   "rule",
   "promise",
   "clip",
+  "state",
   "theory",
 ] as const;
 

@@ -1,14 +1,7 @@
 import type { LineClass, PulseJudgment, Reading, ReadingType } from "../types.ts";
+import { READING_TYPES } from "../types.ts";
 
-const TYPE_KEYS: ReadingType[] = [
-  "outplay",
-  "collapse",
-  "bait",
-  "rule",
-  "promise",
-  "clip",
-  "theory",
-];
+const TYPE_KEYS: ReadingType[] = [...READING_TYPES];
 
 function peaked(choice: string, keys: string[], mass = 0.82): Record<string, number> {
   const rest = (1 - mass) / Math.max(1, keys.length - 1);
@@ -27,6 +20,12 @@ function classify(text: string): LineClass {
   ) {
     return "claim";
   }
+  if (
+    /\b(lead|leads|score|down and|and \d|quarter|q[1-4]|1st|2nd|3rd|4th)\b/.test(t) ||
+    /\b\d+\s*[-\u2013]\s*\d+\b/.test(t)
+  ) {
+    return "claim";
+  }
   if (t.split(/\s+/).length <= 2) return "unbound";
   return "unbound";
 }
@@ -39,6 +38,12 @@ function guessType(text: string): ReadingType {
   if (/\boffside|travel|foul|illegal|rule\b/.test(t)) return "rule";
   if (/\bpromise|if i|gift|sub\b/.test(t)) return "promise";
   if (/\bclip\b/.test(t)) return "clip";
+  if (
+    /\b(lead|leads|score|down and|quarter|q[1-4]|1st|2nd|3rd|4th)\b/.test(t) ||
+    /\b\d+\s*[-\u2013]\s*\d+\b/.test(t)
+  ) {
+    return "state";
+  }
   return "theory";
 }
 
