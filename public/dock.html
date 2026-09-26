@@ -51,6 +51,7 @@
       <input id="utter" placeholder="streamer utterance" />
       <button id="window">Tap window</button>
       <button id="close">Close session</button>
+      <button id="xtape">X tape</button>
       <button id="fresh">New session</button>
       <h2>Folio</h2>
       <div id="folio"></div>
@@ -108,6 +109,8 @@
       }));
     };
     document.getElementById("close").onclick = async () => render(await api("/v1/close", {}));
+    document.getElementById("xtape").onclick = async () =>
+      render(await api("/v1/ingest", { fixture: "x-session", channel: "x" }));
     document.getElementById("fresh").onclick = async () => render(await api("/v1/session", { channel: "local" }));
     refresh();
   </script>

@@ -4,10 +4,35 @@ import { extname, join } from "node:path";
 import { judgeLine } from "./jev/client.ts";
 import { applyPulse, closeSession } from "./compose/pulse.ts";
 import { Ledger } from "./ledger.ts";
+import { parseJsonl, postsToLines, type XPost } from "./ingest/x.ts";
+import { pulseLines } from "./ingest/run.ts";
 import { READING_TYPES, THRESHOLDS, type Line, type ReadingType, type SessionState } from "./types.ts";
 
-const PORT = Number(process.env.GLOSS_PORT ?? 8788);
 const ROOT = join(import.meta.dirname, "..");
+
+function loadEnv() {
+  const path = join(ROOT, ".env");
+  if (!existsSync(path)) return;
+  for (const row of readFileSync(path, "utf8").split("\n")) {
+    const line = row.trim();
+    if (!line || line.startsWith("#")) continue;
+    const cut = line.indexOf("=");
+    if (cut < 1) continue;
+    const key = line.slice(0, cut).trim();
+    let value = line.slice(cut + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
+loadEnv();
+
+const PORT = Number(process.env.GLOSS_PORT ?? 8788);
 const ledger = new Ledger(process.env.GLOSS_DB ?? join(ROOT, "data/gloss.db"));
 
 let session: SessionState =
@@ -135,6 +160,38 @@ const server = createServer(async (req, res) => {
       session = closeSession(session, Date.now());
       ledger.save(session);
       json(res, 200, publicView(session));
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/v1/ingest") {
+      const body = await readBody(req);
+      const fixtureName = String(body.fixture ?? "");
+      const allowed = new Set(["x-session", "ranked-session"]);
+      let posts: XPost[] = [];
+      if (fixtureName) {
+        if (!allowed.has(fixtureName)) {
+          json(res, 400, { error: "unknown fixture" });
+          return;
+        }
+        const raw = readFileSync(join(ROOT, "fixtures", `${fixtureName}.jsonl`), "utf8");
+        posts = parseJsonl(raw);
+      } else if (Array.isArray(body.posts)) {
+        posts = body.posts as XPost[];
+      }
+      session = ledger.openSession(String(body.channel ?? "x"));
+      if (body.facts || body.streamerUtterance) {
+        session = {
+          ...session,
+          window: {
+            ...session.window,
+            facts: String(body.facts ?? ""),
+            streamerUtterance: String(body.streamerUtterance ?? ""),
+          },
+        };
+      }
+      const lines = postsToLines(posts, session.id);
+      session = await pulseLines(session, lines);
+      ledger.save(session);
+      json(res, 200, { ...publicView(session), ingested: lines.length });
       return;
     }
     const file = join(ROOT, "public", url.pathname);
