@@ -16,8 +16,9 @@
     <aside class="margin">
       <h2>Line</h2>
       <input id="user" value="chat" />
-      <textarea id="text" rows="4" placeholder="what the room alleges"></textarea>
+      <textarea id="text" rows="4" placeholder="one allegation, or a burst — one line each"></textarea>
       <button id="send">Pulse</button>
+      <button id="scout">Scout</button>
       <h2>Window facts</h2>
       <textarea id="facts" rows="3" placeholder="empty = no Bound"></textarea>
       <input id="utter" placeholder="streamer utterance" />
@@ -76,7 +77,8 @@
       if (foot) {
         const g = view.glass ? "glass on" : "glass off";
         const c = view.citation ? `f${view.citation.frame_seq}` : "□";
-        foot.textContent = `${g} · ${c} · ${view.live.length} live`;
+        const scout = view.scouted != null ? ` · scouted ${view.scouted}` : "";
+        foot.textContent = `${g} · ${c} · ${view.live.length} live${scout}`;
       }
       liveEl.innerHTML = view.live.length
         ? view.live.map(card).join("")
@@ -91,6 +93,13 @@
     async function refresh() { render(await api("/v1/rail")); }
     document.getElementById("send").onclick = async () => {
       render(await api("/v1/line", {
+        text: document.getElementById("text").value,
+        user: document.getElementById("user").value,
+      }));
+      document.getElementById("text").value = "";
+    };
+    document.getElementById("scout").onclick = async () => {
+      render(await api("/v1/scout", {
         text: document.getElementById("text").value,
         user: document.getElementById("user").value,
       }));
