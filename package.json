@@ -8,7 +8,8 @@
     "start": "node --experimental-strip-types src/server.ts",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "replay": "node --experimental-strip-types src/replay.ts fixtures/ranked-session.jsonl",
-    "replay:x": "node --experimental-strip-types src/replay.ts fixtures/x-session.jsonl"
+    "replay:x": "node --experimental-strip-types src/replay.ts fixtures/x-session.jsonl",
+    "jev:probe": "node --experimental-strip-types src/jev/probe.ts"
   },
   "engines": {
     "node": ">=22"

@@ -1,5 +1,6 @@
 import { fixtureJudge } from "./fixtures.ts";
 import { buildQuestions, buildState } from "./questions.ts";
+import { noteLiveFail, noteLiveOk } from "./status.ts";
 import type { Line, PulseJudgment, Reading, ReadingType, WindowDescriptor } from "../types.ts";
 
 const MODEL = process.env.GLOSS_MODEL ?? "jev-latest";
@@ -51,28 +52,49 @@ export async function judgeLine(input: {
   });
   const questions = buildQuestions({ live: input.live, allow: input.allow });
 
-  const response = await fetch(ENDPOINT, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      state,
-      questions,
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8_000);
+  let response: Response;
+  try {
+    response = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        state,
+        questions,
+      }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    noteLiveFail(err instanceof Error ? err.message : "network");
+    return fixtureJudge({
+      text: input.line.text,
+      live: input.live,
+      windowFacts: input.window.facts,
+    });
+  }
+  clearTimeout(timer);
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`TypeSafe ${response.status}: ${body.slice(0, 400)}`);
+    noteLiveFail(`TypeSafe ${response.status}: ${body.slice(0, 180)}`);
+    return fixtureJudge({
+      text: input.line.text,
+      live: input.live,
+      windowFacts: input.window.facts,
+    });
   }
 
   const payload = (await response.json()) as {
     model?: string;
     answers?: Record<string, RawAnswer>;
   };
+  noteLiveOk();
   const answers = payload.answers ?? {};
   const echoes: PulseJudgment["echoes"] = {};
   for (const reading of input.live) {
