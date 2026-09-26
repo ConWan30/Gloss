@@ -38,7 +38,7 @@
   </style>
 </head>
 <body>
-  <header>Gloss · dock · <span id="mode">fixture</span> · <span id="channel">local</span></header>
+  <header>Gloss · dock · <span id="mode">fixture</span> · <span id="channel">local</span> · <span id="cite">□</span></header>
   <main>
     <section class="rail" id="live"></section>
     <aside>
@@ -49,6 +49,9 @@
       <h2>Window facts</h2>
       <textarea id="facts" rows="3" placeholder="empty = no Bound"></textarea>
       <input id="utter" placeholder="streamer utterance" />
+      <label class="meta"><input id="glass" type="checkbox" /> Margin Glass</label>
+      <input id="clock" placeholder="clock_ns" />
+      <input id="frame" placeholder="frame_seq" />
       <button id="window">Tap window</button>
       <button id="close">Close session</button>
       <button id="xtape">X tape</button>
@@ -86,6 +89,10 @@
     function render(view) {
       document.getElementById("mode").textContent = view.judge;
       document.getElementById("channel").textContent = view.channel;
+      document.getElementById("cite").textContent = view.citation
+        ? `f${view.citation.frame_seq}`
+        : "□";
+      document.getElementById("glass").checked = !!view.glass;
       liveEl.innerHTML = view.live.length
         ? view.live.map(card).join("")
         : '<div class="empty">□ no live readings</div>';
@@ -102,10 +109,13 @@
       document.getElementById("text").value = "";
     };
     document.getElementById("window").onclick = async () => {
+      await api("/v1/glass", { on: document.getElementById("glass").checked });
       render(await api("/v1/window", {
         facts: document.getElementById("facts").value,
         streamerUtterance: document.getElementById("utter").value,
         startedMs: Date.now(),
+        clock_ns: document.getElementById("clock").value,
+        frame_seq: document.getElementById("frame").value,
       }));
     };
     document.getElementById("close").onclick = async () => render(await api("/v1/close", {}));
