@@ -7,6 +7,7 @@ import { Ledger } from "./ledger.ts";
 import { parseJsonl, postsToLines, type XPost } from "./ingest/x.ts";
 import { pulseLines } from "./ingest/run.ts";
 import { parseCitation, publicCitation } from "./glass.ts";
+import { restampLive } from "./compose/restamp.ts";
 import { READING_TYPES, THRESHOLDS, type Line, type ReadingType, type SessionState } from "./types.ts";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -120,6 +121,7 @@ const server = createServer(async (req, res) => {
       const body = await readBody(req);
       session = {
         ...session,
+        glass: typeof body.glass === "boolean" ? body.glass : body.on === true ? true : session.glass,
         window: {
           startedMs: Number(body.startedMs ?? Date.now()),
           lengthMs: Number(body.lengthMs ?? THRESHOLDS.windowMs),
@@ -128,6 +130,7 @@ const server = createServer(async (req, res) => {
           citation: parseCitation(body),
         },
       };
+      session = await restampLive(session);
       ledger.save(session);
       json(res, 200, publicView(session));
       return;
