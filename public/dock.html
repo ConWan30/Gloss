@@ -4,45 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gloss · dock</title>
-  <style>
-    :root {
-      --void: #0c0c0d; --iron: #1a1b1e; --line: #2c2e33; --ink: #e8e4d9;
-      --mute: #8a8578; --hold: #c4a35a; --clash: #c45a5a; --thin: #6e7c8a;
-      --bound: #6a8f71; --split: #b57a3a; --echo: #7a6ea8; --open: #9aa0a6;
-    }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; background: var(--void); color: var(--ink); font: 14px/1.4 'Segoe UI', sans-serif; }
-    header, footer { padding: 16px 20px; border-bottom: 1px solid var(--line); letter-spacing: 0.12em; text-transform: uppercase; font-size: 11px; color: var(--mute); }
-    footer { border-bottom: 0; border-top: 1px solid var(--line); }
-    main { display: grid; grid-template-columns: 1fr 280px; min-height: calc(100vh - 96px); }
-    .rail { padding: 20px; }
-    .card { background: var(--iron); border: 1px solid var(--line); padding: 14px 16px; margin-bottom: 10px; }
-    .mark { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
-    .mark.clash { color: var(--clash); } .mark.hold { color: var(--hold); }
-    .mark.thin { color: var(--thin); } .mark.bound { color: var(--bound); }
-    .mark.split { color: var(--split); } .mark.echo { color: var(--echo); }
-    .mark.open, .mark.closed { color: var(--open); }
-    .label { font-size: 18px; margin: 6px 0 4px; }
-    .meta { color: var(--mute); font-size: 12px; }
-    .bar { height: 3px; background: var(--line); margin-top: 10px; }
-    .bar > i { display: block; height: 3px; background: var(--ink); }
-    .holdbtn { width: auto; margin: 8px 0 0; padding: 6px 10px; }
-    aside { border-left: 1px solid var(--line); padding: 20px; }
-    textarea, input, button {
-      width: 100%; background: var(--void); color: var(--ink); border: 1px solid var(--line);
-      padding: 8px; margin: 0 0 8px; font: inherit;
-    }
-    button { cursor: pointer; letter-spacing: 0.08em; text-transform: uppercase; font-size: 11px; }
-    button:hover { border-color: var(--ink); }
-    h2 { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); font-weight: 500; }
-    .empty { color: var(--mute); padding: 24px 4px; }
-  </style>
+  <link rel="stylesheet" href="/gloss.css" />
 </head>
 <body>
-  <header>Gloss · dock · <span id="mode">fixture</span> · <span id="channel">local</span> · <span id="cite">□</span></header>
-  <main>
-    <section class="rail" id="live"></section>
-    <aside>
+  <header class="mast">
+    <div class="wordmark"><b>Gloss</b> dock</div>
+    <div style="margin-top:10px"><span id="mode">fixture</span> · <span id="channel">local</span> · <span id="cite">□</span></div>
+  </header>
+  <main class="shell">
+    <section class="stage" id="live"></section>
+    <aside class="margin">
       <h2>Line</h2>
       <input id="user" value="chat" />
       <textarea id="text" rows="4" placeholder="what the room alleges"></textarea>
@@ -62,7 +33,7 @@
       <div id="folio"></div>
     </aside>
   </main>
-  <footer id="foot">Three live readings. No crown. Tape is the text.</footer>
+  <footer class="mast" id="foot">Three live readings. No crown. Tape is the text.</footer>
   <script>
     const liveEl = document.getElementById("live");
     const folioEl = document.getElementById("folio");
@@ -86,10 +57,10 @@
       const hold = r.mark === "hold"
         ? ""
         : `<button class="holdbtn" data-hold="${escapeHtml(r.id)}">Hold</button>`;
-      return `<article class="card">
-        <div class="mark ${r.mark}">${r.mark}</div>
+      return `<article class="card ${escapeHtml(r.mark)}">
+        <div class="mark ${escapeHtml(r.mark)}">${escapeHtml(r.mark)}</div>
         <div class="label">${escapeHtml(r.label)}</div>
-        <div class="meta">${r.type}${r.echoOf ? " · echo" : ""}</div>
+        <div class="meta">${escapeHtml(r.type)}${r.echoOf ? " · echo" : ""}</div>
         <div class="bar"><i style="width:${pct}%"></i></div>
         ${hold}
       </article>`;
@@ -111,7 +82,7 @@
         ? view.live.map(card).join("")
         : '<div class="empty">□ no live readings</div>';
       folioEl.innerHTML = view.folio.slice(-6).reverse().map((r) =>
-        `<div class="meta">${r.mark} · ${escapeHtml(r.label)}</div>`
+        `<div class="meta">${escapeHtml(r.mark)} · ${escapeHtml(r.label)}</div>`
       ).join("") || '<div class="meta">empty</div>';
       liveEl.querySelectorAll("[data-hold]").forEach((btn) => {
         btn.onclick = async () => render(await api("/v1/hold", { id: btn.getAttribute("data-hold") }));
