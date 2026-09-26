@@ -34,6 +34,8 @@ Set `TYPESAFE_API_KEY`. Never put that key in the dock page.
 
 Slice 2: dock **X tape** pulses `fixtures/x-session.jsonl` through `/v1/ingest`. Posts are lines. Gloss does not post back to X.
 
+Slice 3: **Margin Glass** is off. Check it, tap `clock_ns` + `frame_seq`. Header shows `fN` or `□`. A citation is not Bound. Gloss does not write Qoresence.
+
 ```powershell
 cd C:\Users\Contr\Projects\gloss
 git pull

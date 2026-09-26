@@ -41,11 +41,17 @@ export type Line = {
   text: string;
 };
 
+export type GlassCitation = {
+  clock_ns: string;
+  frame_seq: number;
+};
+
 export type WindowDescriptor = {
   startedMs: number;
   lengthMs: number;
   facts: string;
   streamerUtterance: string;
+  citation?: GlassCitation | null;
 };
 
 export type ChoiceVector = {
@@ -89,6 +95,7 @@ export type SessionState = {
   channel: string;
   startedMs: number;
   closedMs: number | null;
+  glass?: boolean;
   window: WindowDescriptor;
   live: Reading[];
   folio: Reading[];

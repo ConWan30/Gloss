@@ -12,6 +12,7 @@ It does not recap the stream, score the play, speak in chat, or crown a reading.
 | Compose | Marks from vectors. Caps. Decay. Echo merge. |
 | Ledger | Readings, pulses, folio. Source of record. |
 | Surface | Dock now. Rail later. Caption later. |
+| Glass | Opt-in window citation. Default off. Fail-closed. |
 
 The model does not write the reading label. A span from chat or a canned string is the record.
 
@@ -29,10 +30,18 @@ Open · Bound · Thin · Split · Clash · Echo · Closed · Hold
 
 Three live readings. Opening a fourth is forbidden. Merge or close first.
 
-## Out of product (slice 2)
+## Glass
+
+Default OFF. On, a reading may show `clock_ns` and `frame_seq` from a tapped window.
+Missing or malformed citation renders □. Glass does not invent a clock.
+A citation is not evidence. Bound still requires window facts.
+Gloss does not own Qoresence's clock.
+
+## Out of product (slice 3)
 
 Second, Caption, Bits pins, chat bots, generated recaps, game APIs,
-client-held keys, a winner, a fourth live reading, live X API polling.
+client-held keys, a winner, a fourth live reading, live X API polling,
+writing into Qoresence.
 
 ## Keys
 
