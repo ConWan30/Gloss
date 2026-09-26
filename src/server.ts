@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { extname, join } from "node:path";
 import { judgeLine } from "./jev/client.ts";
 import { applyPulse, closeSession } from "./compose/pulse.ts";
+import { applySecond } from "./compose/second.ts";
 import { Ledger } from "./ledger.ts";
 import { parseJsonl, postsToLines, type XPost } from "./ingest/x.ts";
 import { pulseLines } from "./ingest/run.ts";
@@ -124,6 +125,11 @@ const server = createServer(async (req, res) => {
       res.end(readFileSync(join(ROOT, "public/caption.html")));
       return;
     }
+    if (req.method === "GET" && url.pathname === "/second") {
+      res.writeHead(200, { "Content-Type": MIME[".html"] });
+      res.end(readFileSync(join(ROOT, "public/second.html")));
+      return;
+    }
     if (req.method === "GET" && url.pathname === "/v1/rail") {
       json(res, 200, publicView(session));
       return;
@@ -239,6 +245,25 @@ const server = createServer(async (req, res) => {
         live: session.live.map((r) => (r.id === id ? { ...r, mark: "hold" } : r)),
       };
       ledger.save(session);
+      json(res, 200, publicView(session));
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/v1/second") {
+      const body = await readBody(req);
+      const id = String(body.id ?? "");
+      const line: Line = {
+        id: crypto.randomUUID(),
+        sessionId: session.id,
+        clockMs: Date.now(),
+        user: String(body.user ?? "viewer").slice(0, 32),
+        text: session.live.find((r) => r.id === id)?.label ?? "",
+      };
+      if (!id || !line.text) {
+        json(res, 200, publicView(session));
+        return;
+      }
+      session = applySecond(session, id, line.id);
+      ledger.save(session, line);
       json(res, 200, publicView(session));
       return;
     }
