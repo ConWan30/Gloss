@@ -1,0 +1,15 @@
+{
+  "name": "gloss",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Marginal readings of the live tape.",
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-strip-types src/server.ts",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "replay": "node --experimental-strip-types src/replay.ts fixtures/ranked-session.jsonl"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
