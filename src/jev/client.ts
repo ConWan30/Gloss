@@ -37,7 +37,7 @@ export async function judgeLine(input: {
   allow: ReadingType[];
 }): Promise<PulseJudgment> {
   const key = process.env.TYPESAFE_API_KEY;
-  if (!key) {
+  if (!key || process.env.NODE_TEST_CONTEXT) {
     return fixtureJudge({
       text: input.line.text,
       live: input.live,
