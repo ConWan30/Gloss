@@ -10,6 +10,10 @@
     .kicker { letter-spacing: 0.16em; text-transform: uppercase; font-size: 10px; color: #8a8578; margin-bottom: 10px; }
     .card { border-top: 1px solid #2c2e33; padding: 10px 0; }
     .mark { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #8a8578; }
+    .mark.hold { color: #c4a35a; } .mark.clash { color: #c45a5a; }
+    .mark.thin { color: #6e7c8a; } .mark.bound { color: #6a8f71; }
+    .mark.split { color: #b57a3a; } .mark.echo { color: #7a6ea8; }
+    .mark.open, .mark.closed { color: #9aa0a6; }
     .label { margin: 4px 0 2px; }
     .empty { color: #8a8578; padding: 24px 0; }
   </style>
@@ -20,6 +24,11 @@
     <div id="root"><div class="empty">□</div></div>
   </div>
   <script>
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
     async function tick() {
       const view = await fetch("/v1/rail").then((r) => r.json());
       const root = document.getElementById("root");
@@ -30,7 +39,7 @@
       const cite = view.citation ? ` · f${view.citation.frame_seq}` : " · □";
       document.querySelector(".kicker").textContent = "Gloss" + cite;
       root.innerHTML = view.live.map((r) =>
-        `<div class="card"><div class="mark">${r.mark}</div><div class="label">${r.label}</div></div>`
+        `<div class="card"><div class="mark ${escapeHtml(r.mark)}">${escapeHtml(r.mark)}</div><div class="label">${escapeHtml(r.label)}</div></div>`
       ).join("");
     }
     tick();
