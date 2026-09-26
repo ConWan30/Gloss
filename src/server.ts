@@ -8,6 +8,8 @@ import { parseJsonl, postsToLines, type XPost } from "./ingest/x.ts";
 import { pulseLines } from "./ingest/run.ts";
 import { parseCitation, publicCitation } from "./glass.ts";
 import { restampLive } from "./compose/restamp.ts";
+import { judgeStatus } from "./jev/status.ts";
+import { probeJev } from "./jev/probe.ts";
 import { READING_TYPES, THRESHOLDS, type Line, type ReadingType, type SessionState } from "./types.ts";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -68,6 +70,7 @@ function publicReading(r: SessionState["live"][number]) {
 function publicView(s: SessionState) {
   const glass = s.glass === true;
   const citation = publicCitation(glass, s.window.citation ?? null);
+  const status = judgeStatus();
   return {
     sessionId: s.id,
     channel: s.channel,
@@ -82,7 +85,8 @@ function publicView(s: SessionState) {
     },
     live: s.live.slice(0, THRESHOLDS.maxLive).map(publicReading),
     folio: s.folio.map(publicReading),
-    judge: process.env.TYPESAFE_API_KEY ? "live" : "fixture",
+    judge: status.mode,
+    judgeError: status.error,
   };
 }
 
@@ -108,6 +112,11 @@ const server = createServer(async (req, res) => {
     }
     if (req.method === "GET" && url.pathname === "/v1/rail") {
       json(res, 200, publicView(session));
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/v1/jev/probe") {
+      const result = await probeJev();
+      json(res, 200, { ...publicView(session), probe: result });
       return;
     }
     if (req.method === "POST" && url.pathname === "/v1/session") {
@@ -232,6 +241,7 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
+  const status = judgeStatus();
   console.log(`Gloss dock http://127.0.0.1:${PORT}/dock`);
-  console.log(`judge=${process.env.TYPESAFE_API_KEY ? "live" : "fixture"} session=${session.id}`);
+  console.log(`judge=${status.mode} session=${session.id}`);
 });
