@@ -27,6 +27,8 @@
         root.innerHTML = '<div class="empty">□ no live readings</div>';
         return;
       }
+      const cite = view.citation ? ` · f${view.citation.frame_seq}` : " · □";
+      document.querySelector(".kicker").textContent = "Gloss" + cite;
       root.innerHTML = view.live.map((r) =>
         `<div class="card"><div class="mark">${r.mark}</div><div class="label">${r.label}</div></div>`
       ).join("");

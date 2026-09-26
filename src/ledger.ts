@@ -40,17 +40,19 @@ export class Ledger {
       lengthMs: THRESHOLDS.windowMs,
       facts: "",
       streamerUtterance: "",
+      citation: null,
     };
     this.db
       .prepare(
         "INSERT INTO sessions (id, channel, started_ms, closed_ms, window_json) VALUES (?, ?, ?, NULL, ?)",
       )
-      .run(id, channel, startedMs, JSON.stringify(window));
+      .run(id, channel, startedMs, JSON.stringify({ glass: false, window }));
     return {
       id,
       channel,
       startedMs,
       closedMs: null,
+      glass: false,
       window,
       live: [],
       folio: [],
@@ -60,7 +62,11 @@ export class Ledger {
   save(session: SessionState, line?: Line) {
     this.db
       .prepare("UPDATE sessions SET closed_ms = ?, window_json = ? WHERE id = ?")
-      .run(session.closedMs, JSON.stringify(session.window), session.id);
+      .run(
+        session.closedMs,
+        JSON.stringify({ glass: session.glass === true, window: session.window }),
+        session.id,
+      );
     if (line) {
       this.db
         .prepare(
@@ -93,12 +99,17 @@ export class Ledger {
       .prepare("SELECT payload FROM readings WHERE session_id = ?")
       .all(sessionId) as { payload: string }[];
     const all = readings.map((r) => JSON.parse(r.payload) as Reading);
+    const stored = JSON.parse(row.window_json) as
+      | WindowDescriptor
+      | { glass?: boolean; window?: WindowDescriptor };
+    const wrapped = stored && "window" in stored && stored.window ? stored : null;
     return {
       id: row.id,
       channel: row.channel,
       startedMs: row.started_ms,
       closedMs: row.closed_ms,
-      window: JSON.parse(row.window_json) as WindowDescriptor,
+      glass: wrapped ? wrapped.glass === true : false,
+      window: (wrapped ? wrapped.window : stored) as WindowDescriptor,
       live: all.filter((r) => r.mark !== "closed"),
       folio: all.filter((r) => r.mark === "closed" || r.type === "promise"),
     };
