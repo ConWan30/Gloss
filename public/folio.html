@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=318" />
+  <title>Gloss · folio</title>
+  <style>
+    html, body { margin: 0; background: #0c0c0d; color: #e8e4d9; font: 13px/1.35 'Segoe UI', sans-serif; }
+    .wrap { width: 318px; padding: 12px; }
+    .kicker { letter-spacing: 0.16em; text-transform: uppercase; font-size: 10px; color: #8a8578; margin-bottom: 10px; }
+    .card { border-top: 1px solid #2c2e33; padding: 10px 0; }
+    .mark { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #8a8578; }
+    .label { margin: 4px 0 2px; }
+    .empty { color: #8a8578; padding: 24px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="kicker">Gloss · folio</div>
+    <div id="root"><div class="empty">□</div></div>
+  </div>
+  <script>
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+    async function tick() {
+      const view = await fetch("/v1/folio").then((r) => r.json());
+      const root = document.getElementById("root");
+      const cite = view.citation ? ` · f${view.citation.frame_seq}` : " · □";
+      document.querySelector(".kicker").textContent = "Gloss · folio" + cite;
+      if (!view.folio.length) {
+        root.innerHTML = '<div class="empty">□ no folio</div>';
+        return;
+      }
+      root.innerHTML = view.folio.map((r) =>
+        `<div class="card"><div class="mark">${escapeHtml(r.mark)}</div><div class="label">${escapeHtml(r.label)}</div></div>`
+      ).join("");
+    }
+    tick();
+    setInterval(tick, 4000);
+  </script>
+</body>
+</html>
