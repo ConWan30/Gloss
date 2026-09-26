@@ -46,3 +46,5 @@ writing into Qoresence.
 ## Keys
 
 `TYPESAFE_API_KEY` stays on the server. Tests run on fixtures when it is unset.
+Live Jev uses `POST https://api.typesafe.ai/v1/systemone` with `model`, `state`, `questions`.
+A live miss falls back to the fixture judge and stamps `live-down`. Do not invent request fields.

@@ -32,6 +32,14 @@ notepad .env
 
 Set `TYPESAFE_API_KEY`. Never put that key in the dock page.
 
+```powershell
+npm run jev:probe
+```
+
+`ok: true` → restart `npm start`. Header reads `live`. Dock **Probe Jev** repeats it.
+
+Live fail-closed: dead key or timeout uses fixtures for that pulse and stamps `live-down`. Tests stay fixture.
+
 Slice 2: dock **X tape** pulses `fixtures/x-session.jsonl` through `/v1/ingest`. Posts are lines. Gloss does not post back to X.
 
 Slice 3: **Margin Glass** is off. Check it, tap `clock_ns` + `frame_seq`. Header shows `fN` or `□`. A citation is not Bound. Gloss does not write Qoresence.
