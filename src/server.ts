@@ -6,6 +6,7 @@ import { applyPulse, closeSession } from "./compose/pulse.ts";
 import { Ledger } from "./ledger.ts";
 import { parseJsonl, postsToLines, type XPost } from "./ingest/x.ts";
 import { pulseLines } from "./ingest/run.ts";
+import { parseCitation, publicCitation } from "./glass.ts";
 import { READING_TYPES, THRESHOLDS, type Line, type ReadingType, type SessionState } from "./types.ts";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -64,11 +65,20 @@ function publicReading(r: SessionState["live"][number]) {
 }
 
 function publicView(s: SessionState) {
+  const glass = s.glass === true;
+  const citation = publicCitation(glass, s.window.citation ?? null);
   return {
     sessionId: s.id,
     channel: s.channel,
     closedMs: s.closedMs,
-    window: s.window,
+    glass,
+    citation,
+    window: {
+      startedMs: s.window.startedMs,
+      lengthMs: s.window.lengthMs,
+      facts: s.window.facts,
+      streamerUtterance: s.window.streamerUtterance,
+    },
     live: s.live.slice(0, THRESHOLDS.maxLive).map(publicReading),
     folio: s.folio.map(publicReading),
     judge: process.env.TYPESAFE_API_KEY ? "live" : "fixture",
@@ -115,8 +125,16 @@ const server = createServer(async (req, res) => {
           lengthMs: Number(body.lengthMs ?? THRESHOLDS.windowMs),
           facts: String(body.facts ?? ""),
           streamerUtterance: String(body.streamerUtterance ?? ""),
+          citation: parseCitation(body),
         },
       };
+      ledger.save(session);
+      json(res, 200, publicView(session));
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/v1/glass") {
+      const body = await readBody(req);
+      session = { ...session, glass: body.on === true };
       ledger.save(session);
       json(res, 200, publicView(session));
       return;
@@ -178,13 +196,17 @@ const server = createServer(async (req, res) => {
         posts = body.posts as XPost[];
       }
       session = ledger.openSession(String(body.channel ?? "x"));
-      if (body.facts || body.streamerUtterance) {
+      if (body.facts || body.streamerUtterance || body.clock_ns) {
         session = {
           ...session,
+          glass: body.glass === true ? true : session.glass,
           window: {
             ...session.window,
-            facts: String(body.facts ?? ""),
-            streamerUtterance: String(body.streamerUtterance ?? ""),
+            facts: String(body.facts ?? session.window.facts),
+            streamerUtterance: String(
+              body.streamerUtterance ?? session.window.streamerUtterance,
+            ),
+            citation: parseCitation(body) ?? session.window.citation ?? null,
           },
         };
       }
