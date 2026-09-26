@@ -121,4 +121,13 @@ export class Ledger {
       .get() as { id: string } | undefined;
     return row ? this.load(row.id) : null;
   }
+
+  lastClosed(): SessionState | null {
+    const row = this.db
+      .prepare(
+        "SELECT id FROM sessions WHERE closed_ms IS NOT NULL ORDER BY closed_ms DESC LIMIT 1",
+      )
+      .get() as { id: string } | undefined;
+    return row ? this.load(row.id) : null;
+  }
 }
