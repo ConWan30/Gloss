@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gloss · dock</title>
+  <style>
+    :root {
+      --void: #0c0c0d; --iron: #1a1b1e; --line: #2c2e33; --ink: #e8e4d9;
+      --mute: #8a8578; --hold: #c4a35a; --clash: #c45a5a; --thin: #6e7c8a;
+      --bound: #6a8f71; --split: #b57a3a; --echo: #7a6ea8; --open: #9aa0a6;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--void); color: var(--ink); font: 14px/1.4 'Segoe UI', sans-serif; }
+    header, footer { padding: 16px 20px; border-bottom: 1px solid var(--line); letter-spacing: 0.12em; text-transform: uppercase; font-size: 11px; color: var(--mute); }
+    footer { border-bottom: 0; border-top: 1px solid var(--line); }
+    main { display: grid; grid-template-columns: 1fr 280px; min-height: calc(100vh - 96px); }
+    .rail { padding: 20px; }
+    .card { background: var(--iron); border: 1px solid var(--line); padding: 14px 16px; margin-bottom: 10px; }
+    .mark { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
+    .mark.clash { color: var(--clash); } .mark.hold { color: var(--hold); }
+    .mark.thin { color: var(--thin); } .mark.bound { color: var(--bound); }
+    .mark.split { color: var(--split); } .mark.echo { color: var(--echo); }
+    .mark.open, .mark.closed { color: var(--open); }
+    .label { font-size: 18px; margin: 6px 0 4px; }
+    .meta { color: var(--mute); font-size: 12px; }
+    .bar { height: 3px; background: var(--line); margin-top: 10px; }
+    .bar > i { display: block; height: 3px; background: var(--ink); }
+    aside { border-left: 1px solid var(--line); padding: 20px; }
+    textarea, input, button {
+      width: 100%; background: var(--void); color: var(--ink); border: 1px solid var(--line);
+      padding: 8px; margin: 0 0 8px; font: inherit;
+    }
+    button { cursor: pointer; letter-spacing: 0.08em; text-transform: uppercase; font-size: 11px; }
+    button:hover { border-color: var(--ink); }
+    h2 { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); font-weight: 500; }
+    .empty { color: var(--mute); padding: 24px 4px; }
+  </style>
+</head>
+<body>
+  <header>Gloss · dock · <span id="mode">fixture</span> · <span id="channel">local</span></header>
+  <main>
+    <section class="rail" id="live"></section>
+    <aside>
+      <h2>Line</h2>
+      <input id="user" value="chat" />
+      <textarea id="text" rows="4" placeholder="what the room alleges"></textarea>
+      <button id="send">Pulse</button>
+      <h2>Window facts</h2>
+      <textarea id="facts" rows="3" placeholder="empty = no Bound"></textarea>
+      <input id="utter" placeholder="streamer utterance" />
+      <button id="window">Tap window</button>
+      <button id="close">Close session</button>
+      <button id="fresh">New session</button>
+      <h2>Folio</h2>
+      <div id="folio"></div>
+    </aside>
+  </main>
+  <footer>Three live readings. No crown. Tape is the text.</footer>
+  <script>
+    const liveEl = document.getElementById("live");
+    const folioEl = document.getElementById("folio");
+    async function api(path, body) {
+      const res = await fetch(path, {
+        method: body ? "POST" : "GET",
+        headers: body ? { "Content-Type": "application/json" } : {},
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return res.json();
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+    function card(r) {
+      const pct = Math.round((r.concentration || 0) * 100);
+      return `<article class="card">
+        <div class="mark ${r.mark}">${r.mark}</div>
+        <div class="label">${escapeHtml(r.label)}</div>
+        <div class="meta">${r.type}${r.echoOf ? " · echo" : ""}</div>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+      </article>`;
+    }
+    function render(view) {
+      document.getElementById("mode").textContent = view.judge;
+      document.getElementById("channel").textContent = view.channel;
+      liveEl.innerHTML = view.live.length
+        ? view.live.map(card).join("")
+        : '<div class="empty">□ no live readings</div>';
+      folioEl.innerHTML = view.folio.slice(-6).reverse().map((r) =>
+        `<div class="meta">${r.mark} · ${escapeHtml(r.label)}</div>`
+      ).join("") || '<div class="meta">empty</div>';
+    }
+    async function refresh() { render(await api("/v1/rail")); }
+    document.getElementById("send").onclick = async () => {
+      render(await api("/v1/line", {
+        text: document.getElementById("text").value,
+        user: document.getElementById("user").value,
+      }));
+      document.getElementById("text").value = "";
+    };
+    document.getElementById("window").onclick = async () => {
+      render(await api("/v1/window", {
+        facts: document.getElementById("facts").value,
+        streamerUtterance: document.getElementById("utter").value,
+        startedMs: Date.now(),
+      }));
+    };
+    document.getElementById("close").onclick = async () => render(await api("/v1/close", {}));
+    document.getElementById("fresh").onclick = async () => render(await api("/v1/session", { channel: "local" }));
+    refresh();
+  </script>
+</body>
+</html>
