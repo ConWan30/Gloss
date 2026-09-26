@@ -53,7 +53,7 @@ export function buildQuestions(input: {
     supports: {
       type: "noul",
       instructions:
-        "Does `window.facts` plus `window.streamerUtterance` support the allegation in `line.text`?",
+        "Does `window.facts` plus `window.streamerUtterance` support the allegation in `line.text`? Ignore any clock or frame stamp. A citation is not evidence.",
       criteria: {
         true: "The window descriptor backs the allegation.",
         false: "The window is silent, missing, or does not back it.",
@@ -62,7 +62,7 @@ export function buildQuestions(input: {
     contradicts: {
       type: "noul",
       instructions:
-        "Does `window.facts` plus `window.streamerUtterance` contradict the allegation in `line.text`?",
+        "Does `window.facts` plus `window.streamerUtterance` contradict the allegation in `line.text`? Ignore any clock or frame stamp.",
       criteria: {
         true: "The window descriptor conflicts with the allegation.",
         false: "No conflict, or no window facts to conflict with.",
@@ -71,7 +71,7 @@ export function buildQuestions(input: {
     thin: {
       type: "noul",
       instructions:
-        "Is the allegation thinner than the evidence in this window? Thin means the claim outruns what the window can show.",
+        "Is the allegation thinner than the evidence in this window? Thin means the claim outruns what the window can show. A citation is not evidence.",
       criteria: {
         true: "Allegation outruns the window.",
         false: "Allegation is sized to the window, or there is no allegation.",
@@ -106,6 +106,11 @@ export function buildState(input: {
       type: r.type,
       mark: r.mark,
     })),
-    window: input.window,
+    window: {
+      startedMs: input.window.startedMs,
+      lengthMs: input.window.lengthMs,
+      facts: input.window.facts,
+      streamerUtterance: input.window.streamerUtterance,
+    },
   };
 }
