@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=318" />
+  <title>Gloss · second</title>
+  <style>
+    html, body { margin: 0; background: #0c0c0d; color: #e8e4d9; font: 13px/1.35 'Segoe UI', sans-serif; }
+    .wrap { width: 318px; padding: 12px; }
+    .kicker { letter-spacing: 0.16em; text-transform: uppercase; font-size: 10px; color: #8a8578; margin-bottom: 10px; }
+    .card { border-top: 1px solid #2c2e33; padding: 10px 0; }
+    .mark { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #8a8578; }
+    .mark.hold { color: #c4a35a; } .mark.clash { color: #c45a5a; }
+    .mark.thin { color: #6e7c8a; } .mark.bound { color: #6a8f71; }
+    .mark.split { color: #b57a3a; } .mark.echo { color: #7a6ea8; }
+    button { margin-top: 8px; background: #0c0c0d; color: #e8e4d9; border: 1px solid #2c2e33; padding: 6px 10px; letter-spacing: 0.08em; text-transform: uppercase; font-size: 11px; cursor: pointer; }
+    .empty { color: #8a8578; padding: 24px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="kicker">Gloss · second</div>
+    <div id="root"><div class="empty">□</div></div>
+  </div>
+  <script>
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+    async function api(path, body) {
+      const res = await fetch(path, {
+        method: body ? "POST" : "GET",
+        headers: body ? { "Content-Type": "application/json" } : {},
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return res.json();
+    }
+    function draw(view) {
+      const root = document.getElementById("root");
+      if (!view.live || !view.live.length) {
+        root.innerHTML = '<div class="empty">□ no live readings</div>';
+        return;
+      }
+      root.innerHTML = view.live.map((r) =>
+        `<div class="card">` +
+        `<div class="mark ${escapeHtml(r.mark)}">${escapeHtml(r.mark)}</div>` +
+        `<div>${escapeHtml(r.label)}</div>` +
+        `<button data-id="${escapeHtml(r.id)}">Second</button>` +
+        `</div>`
+      ).join("");
+      root.querySelectorAll("button[data-id]").forEach((btn) => {
+        btn.onclick = async () => draw(await api("/v1/second", { id: btn.getAttribute("data-id"), user: "viewer" }));
+      });
+    }
+    async function tick() { draw(await api("/v1/rail")); }
+    tick();
+    setInterval(tick, 4000);
+  </script>
+</body>
+</html>
