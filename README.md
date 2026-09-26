@@ -32,6 +32,15 @@ notepad .env
 
 Set `TYPESAFE_API_KEY`. Never put that key in the dock page.
 
+Slice 2: dock **X tape** pulses `fixtures/x-session.jsonl` through `/v1/ingest`. Posts are lines. Gloss does not post back to X.
+
+```powershell
+cd C:\Users\Contr\Projects\gloss
+git pull
+npm test
+npm start
+```
+
 ## Marks
 
 Open · Bound · Thin · Split · Clash · Echo · Closed · Hold

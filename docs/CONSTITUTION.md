@@ -7,7 +7,7 @@ It does not recap the stream, score the play, speak in chat, or crown a reading.
 
 | Plane | Owns |
 | --- | --- |
-| Ingest | Lines. Dedup. Clock. Window tap. |
+| Ingest | Lines. Dedup. Clock. Window tap. X posts as lines. |
 | Judge | Typed questions over prepared state. Full vectors stored. |
 | Compose | Marks from vectors. Caps. Decay. Echo merge. |
 | Ledger | Readings, pulses, folio. Source of record. |
@@ -29,10 +29,10 @@ Open · Bound · Thin · Split · Clash · Echo · Closed · Hold
 
 Three live readings. Opening a fourth is forbidden. Merge or close first.
 
-## Out of product (slice 1)
+## Out of product (slice 2)
 
 Second, Caption, Bits pins, chat bots, generated recaps, game APIs,
-client-held keys, a winner, a fourth live reading.
+client-held keys, a winner, a fourth live reading, live X API polling.
 
 ## Keys
 

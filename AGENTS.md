@@ -11,4 +11,4 @@ Read `docs/CONSTITUTION.md` before changing marks, questions, or copy.
 - Do not invent TypeSafe request fields.
 - Fixture tests must stay green without a key.
 
-Slice 1 surfaces: `/dock` and `/v1/*`. Do not add chat send, Second, or Caption.
+Slice 2 surfaces: `/dock`, `/v1/*`, `/v1/ingest`. Do not add chat send, Second, Caption, or live X polling.
