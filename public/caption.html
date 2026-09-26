@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gloss · caption</title>
+  <style>
+    html, body { margin: 0; background: transparent; color: #e8e4d9; font: 18px/1.3 'Segoe UI', sans-serif; }
+    .wrap { padding: 10px 14px; }
+    .kicker { letter-spacing: 0.16em; text-transform: uppercase; font-size: 10px; color: #8a8578; }
+    .mark { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #c4a35a; margin-top: 6px; }
+    .label { margin-top: 2px; }
+    .empty { color: #8a8578; padding: 8px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="kicker">Gloss · caption</div>
+    <div id="root"><div class="empty">□</div></div>
+  </div>
+  <script>
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+    async function tick() {
+      const view = await fetch("/v1/caption").then((r) => r.json());
+      const root = document.getElementById("root");
+      const cite = view.citation ? ` · f${view.citation.frame_seq}` : "";
+      document.querySelector(".kicker").textContent = "Gloss · caption" + cite;
+      if (!view.caption) {
+        root.innerHTML = '<div class="empty">□</div>';
+        return;
+      }
+      root.innerHTML =
+        `<div class="mark">${escapeHtml(view.caption.mark)}</div>` +
+        `<div class="label">${escapeHtml(view.caption.label)}</div>`;
+    }
+    tick();
+    setInterval(tick, 2000);
+  </script>
+</body>
+</html>
