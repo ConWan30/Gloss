@@ -1,0 +1,155 @@
+import { createServer } from "node:http";
+import { readFileSync, existsSync } from "node:fs";
+import { extname, join } from "node:path";
+import { judgeLine } from "./jev/client.ts";
+import { applyPulse, closeSession } from "./compose/pulse.ts";
+import { Ledger } from "./ledger.ts";
+import { READING_TYPES, THRESHOLDS, type Line, type ReadingType, type SessionState } from "./types.ts";
+
+const PORT = Number(process.env.GLOSS_PORT ?? 8788);
+const ROOT = join(import.meta.dirname, "..");
+const ledger = new Ledger(process.env.GLOSS_DB ?? join(ROOT, "data/gloss.db"));
+
+let session: SessionState =
+  ledger.latest() ?? ledger.openSession(process.env.GLOSS_CHANNEL ?? "local");
+
+const MIME: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+};
+
+function json(res: import("node:http").ServerResponse, status: number, body: unknown) {
+  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+  res.end(JSON.stringify(body));
+}
+
+function publicReading(r: SessionState["live"][number]) {
+  return {
+    id: r.id,
+    label: r.label,
+    type: r.type,
+    mark: r.mark,
+    concentration: Number(r.concentration.toFixed(3)),
+    echoOf: r.echoOf,
+    openedMs: r.openedMs,
+    windowStartedMs: r.windowStartedMs,
+  };
+}
+
+function publicView(s: SessionState) {
+  return {
+    sessionId: s.id,
+    channel: s.channel,
+    closedMs: s.closedMs,
+    window: s.window,
+    live: s.live.slice(0, THRESHOLDS.maxLive).map(publicReading),
+    folio: s.folio.map(publicReading),
+    judge: process.env.TYPESAFE_API_KEY ? "live" : "fixture",
+  };
+}
+
+async function readBody(req: import("node:http").IncomingMessage) {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) chunks.push(chunk as Buffer);
+  if (!chunks.length) return {};
+  return JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
+}
+
+const server = createServer(async (req, res) => {
+  const url = new URL(req.url ?? "/", `http://127.0.0.1:${PORT}`);
+  try {
+    if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/dock")) {
+      res.writeHead(200, { "Content-Type": MIME[".html"] });
+      res.end(readFileSync(join(ROOT, "public/dock.html")));
+      return;
+    }
+    if (req.method === "GET" && url.pathname === "/rail") {
+      res.writeHead(200, { "Content-Type": MIME[".html"] });
+      res.end(readFileSync(join(ROOT, "public/rail.html")));
+      return;
+    }
+    if (req.method === "GET" && url.pathname === "/v1/rail") {
+      json(res, 200, publicView(session));
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/v1/session") {
+      const body = await readBody(req);
+      session = ledger.openSession(String(body.channel ?? session.channel));
+      ledger.save(session);
+      json(res, 200, publicView(session));
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/v1/window") {
+      const body = await readBody(req);
+      session = {
+        ...session,
+        window: {
+          startedMs: Number(body.startedMs ?? Date.now()),
+          lengthMs: Number(body.lengthMs ?? THRESHOLDS.windowMs),
+          facts: String(body.facts ?? ""),
+          streamerUtterance: String(body.streamerUtterance ?? ""),
+        },
+      };
+      ledger.save(session);
+      json(res, 200, publicView(session));
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/v1/line") {
+      const body = await readBody(req);
+      const line: Line = {
+        id: crypto.randomUUID(),
+        sessionId: session.id,
+        clockMs: Number(body.clockMs ?? Date.now()),
+        user: String(body.user ?? "anon"),
+        text: String(body.text ?? "").slice(0, 280),
+      };
+      if (!line.text.trim()) {
+        json(res, 400, { error: "empty line" });
+        return;
+      }
+      const judgment = await judgeLine({
+        line,
+        live: session.live.filter((r) => r.mark !== "closed"),
+        window: session.window,
+        allow: READING_TYPES as unknown as ReadingType[],
+      });
+      session = applyPulse(session, line, judgment);
+      ledger.save(session, line);
+      json(res, 200, { ...publicView(session), lineId: line.id });
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/v1/hold") {
+      const body = await readBody(req);
+      const id = String(body.id ?? "");
+      session = {
+        ...session,
+        live: session.live.map((r) => (r.id === id ? { ...r, mark: "hold" } : r)),
+      };
+      ledger.save(session);
+      json(res, 200, publicView(session));
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/v1/close") {
+      session = closeSession(session, Date.now());
+      ledger.save(session);
+      json(res, 200, publicView(session));
+      return;
+    }
+    const file = join(ROOT, "public", url.pathname);
+    if (req.method === "GET" && existsSync(file) && file.startsWith(join(ROOT, "public"))) {
+      res.writeHead(200, { "Content-Type": MIME[extname(file)] ?? "application/octet-stream" });
+      res.end(readFileSync(file));
+      return;
+    }
+    json(res, 404, { error: "not found" });
+  } catch (err) {
+    json(res, 500, { error: err instanceof Error ? err.message : "fail" });
+  }
+});
+
+server.listen(PORT, () => {
+  console.log(`Gloss dock http://127.0.0.1:${PORT}/dock`);
+  console.log(`judge=${process.env.TYPESAFE_API_KEY ? "live" : "fixture"} session=${session.id}`);
+});

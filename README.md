@@ -4,42 +4,36 @@ Marginal readings of the live tape.
 
 Gloss holds what the room alleges about a short window. It does not recap, score, speak in chat, or crown a reading.
 
-Slice 1: dock, three-reading cap, echo / thin / split / clash, folio at close. No Second. No Caption. No game API.
+## Windows (your machine)
 
-## Run
+`/home/workdir/gloss` is a sandbox path. It does not exist on your PC.
 
-```bash
-node -v   # 22+
+Needs **Node 22+** (`node:sqlite` + type stripping).
+
+```powershell
+node -v
+cd C:\Users\Contr\Projects
+git clone https://github.com/ConWan30/Gloss.git gloss
+cd gloss
 npm test
 npm start
 ```
 
-Dock: http://127.0.0.1:8788/dock  
-Rail: http://127.0.0.1:8788/rail  
+Then open http://127.0.0.1:8788/dock
 
-Without `TYPESAFE_API_KEY` the judge is the fixture. Put the key in `.env` on the server only.
+If `npm test` complains about `--experimental-strip-types` or `node:sqlite`, your Node is too old. Install current Node LTS 22+ from nodejs.org, open a new PowerShell, run `node -v` again.
 
-```bash
-npm run replay
+Optional live judge (server only):
+
+```powershell
+copy .env.example .env
+notepad .env
 ```
+
+Set `TYPESAFE_API_KEY`. Never put that key in the dock page.
 
 ## Marks
 
 Open · Bound · Thin · Split · Clash · Echo · Closed · Hold
 
 Bound requires window facts. Empty facts stay Thin or Open.
-
-## Layout
-
-```
-src/compose   marks, labels, pulse
-src/jev       question pack, fixture, live client
-src/ledger.ts sqlite
-src/server.ts dock + /v1
-public/       dock and rail
-docs/         constitution
-```
-
-## Not this product
-
-A cohost. A sentiment meter. A prediction winner. A Twitch extension (later, maybe never). A merge into the observatory brain.
