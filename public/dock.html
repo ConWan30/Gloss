@@ -60,7 +60,7 @@
       <div id="folio"></div>
     </aside>
   </main>
-  <footer>Three live readings. No crown. Tape is the text.</footer>
+  <footer id="foot">Three live readings. No crown. Tape is the text.</footer>
   <script>
     const liveEl = document.getElementById("live");
     const folioEl = document.getElementById("folio");
@@ -70,7 +70,9 @@
         headers: body ? { "Content-Type": "application/json" } : {},
         body: body ? JSON.stringify(body) : undefined,
       });
-      return res.json();
+      const view = await res.json();
+      if (!res.ok) throw new Error(view.error || res.status);
+      return view;
     }
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, (c) => ({
@@ -89,10 +91,16 @@
     function render(view) {
       document.getElementById("mode").textContent = view.judge;
       document.getElementById("channel").textContent = view.channel;
-      document.getElementById("cite").textContent = view.citation
-        ? `f${view.citation.frame_seq}`
-        : "□";
-      document.getElementById("glass").checked = !!view.glass;
+      const cite = document.getElementById("cite");
+      if (cite) cite.textContent = view.citation ? `f${view.citation.frame_seq}` : "□";
+      const glassEl = document.getElementById("glass");
+      if (glassEl) glassEl.checked = !!view.glass;
+      const foot = document.getElementById("foot");
+      if (foot) {
+        const g = view.glass ? "glass on" : "glass off";
+        const c = view.citation ? `f${view.citation.frame_seq}` : "□";
+        foot.textContent = `${g} · ${c} · ${view.live.length} live`;
+      }
       liveEl.innerHTML = view.live.length
         ? view.live.map(card).join("")
         : '<div class="empty">□ no live readings</div>';
@@ -109,14 +117,18 @@
       document.getElementById("text").value = "";
     };
     document.getElementById("window").onclick = async () => {
-      await api("/v1/glass", { on: document.getElementById("glass").checked });
-      render(await api("/v1/window", {
-        facts: document.getElementById("facts").value,
-        streamerUtterance: document.getElementById("utter").value,
-        startedMs: Date.now(),
-        clock_ns: document.getElementById("clock").value,
-        frame_seq: document.getElementById("frame").value,
-      }));
+      try {
+        render(await api("/v1/window", {
+          glass: document.getElementById("glass").checked,
+          facts: document.getElementById("facts").value,
+          streamerUtterance: document.getElementById("utter").value,
+          startedMs: Date.now(),
+          clock_ns: document.getElementById("clock").value,
+          frame_seq: document.getElementById("frame").value,
+        }));
+      } catch (err) {
+        document.getElementById("foot").textContent = String(err.message || err);
+      }
     };
     document.getElementById("close").onclick = async () => render(await api("/v1/close", {}));
     document.getElementById("xtape").onclick = async () =>
