@@ -16,16 +16,19 @@ export function folioView(session: SessionState | null) {
       }>,
     };
   }
+  const folio = session.folio.map((r) => ({
+    id: r.id,
+    label: r.label,
+    type: r.type,
+    mark: r.mark,
+  }));
   return {
     sessionId: session.id,
     channel: session.channel,
     closedMs: session.closedMs,
-    citation: publicCitation(session.glass === true, session.window.citation ?? null),
-    folio: session.folio.map((r) => ({
-      id: r.id,
-      label: r.label,
-      type: r.type,
-      mark: r.mark,
-    })),
+    citation: folio.length
+      ? publicCitation(session.glass === true, session.window.citation ?? null)
+      : null,
+    folio,
   };
 }

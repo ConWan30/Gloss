@@ -4,6 +4,18 @@ import { dirname } from "node:path";
 import type { Line, Reading, SessionState, WindowDescriptor } from "./types.ts";
 import { THRESHOLDS } from "./types.ts";
 
+function splitReadings(all: Reading[], closed: boolean) {
+  if (closed) {
+    const live = all.filter((r) => r.type === "promise" && r.mark !== "closed");
+    const liveIds = new Set(live.map((r) => r.id));
+    return { live, folio: all.filter((r) => !liveIds.has(r.id)) };
+  }
+  return {
+    live: all.filter((r) => r.mark !== "closed"),
+    folio: all.filter((r) => r.mark === "closed" || r.type === "promise"),
+  };
+}
+
 export class Ledger {
   private db: DatabaseSync;
 
@@ -103,6 +115,7 @@ export class Ledger {
       | WindowDescriptor
       | { glass?: boolean; window?: WindowDescriptor };
     const wrapped = stored && "window" in stored && stored.window ? stored : null;
+    const split = splitReadings(all, row.closed_ms != null);
     return {
       id: row.id,
       channel: row.channel,
@@ -110,8 +123,8 @@ export class Ledger {
       closedMs: row.closed_ms,
       glass: wrapped ? wrapped.glass === true : false,
       window: (wrapped ? wrapped.window : stored) as WindowDescriptor,
-      live: all.filter((r) => r.mark !== "closed"),
-      folio: all.filter((r) => r.mark === "closed" || r.type === "promise"),
+      live: split.live,
+      folio: split.folio,
     };
   }
 
@@ -125,7 +138,10 @@ export class Ledger {
   lastClosed(): SessionState | null {
     const row = this.db
       .prepare(
-        "SELECT id FROM sessions WHERE closed_ms IS NOT NULL ORDER BY closed_ms DESC LIMIT 1",
+        `SELECT s.id FROM sessions s
+         WHERE s.closed_ms IS NOT NULL
+           AND EXISTS (SELECT 1 FROM readings r WHERE r.session_id = s.id)
+         ORDER BY s.closed_ms DESC LIMIT 1`,
       )
       .get() as { id: string } | undefined;
     return row ? this.load(row.id) : null;
