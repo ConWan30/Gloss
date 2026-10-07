@@ -3,32 +3,41 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=318" />
+  <link rel="icon" href="data:," />
   <title>Gloss · folio</title>
   <link rel="stylesheet" href="/gloss.css" />
+  <script src="/gloss.js"></script>
 </head>
 <body>
-  <div class="narrow">
-    <div class="wordmark"><b>Gloss</b> folio</div>
-    <div id="root"><div class="empty">□</div></div>
+  <div class="narrow folio">
+    <div class="tape is-still" aria-hidden="true"></div>
+    <div class="narrow-head">
+      <div class="wordmark"><b>Gloss</b> folio</div>
+      <div class="tagline" id="folio-meta">Last closed session with readings.</div>
+    </div>
+    <div id="root" class="stagger"><div class="empty">□</div></div>
   </div>
   <script>
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, (c) => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-      }[c]));
+    const plates = Gloss.tracker();
+    function when(ms) {
+      if (!ms) return "";
+      const d = new Date(ms);
+      return "closed " + d.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
     }
     async function tick() {
       const view = await fetch("/v1/folio").then((r) => r.json());
       const root = document.getElementById("root");
       const cite = view.citation ? ` · f${view.citation.frame_seq}` : " · □";
       document.querySelector(".wordmark").innerHTML = "<b>Gloss</b> folio" + cite;
+      const meta = [view.channel, when(view.closedMs)].filter(Boolean).map(Gloss.esc).join(" · ");
+      document.getElementById("folio-meta").innerHTML = meta || "Last closed session with readings.";
+      if (!plates.changed(Gloss.keyOf(view.folio))) return;
       if (!view.folio.length) {
         root.innerHTML = '<div class="empty">□ no folio</div>';
-        return;
+      } else {
+        root.innerHTML = view.folio.map((r) => Gloss.slip(r, plates.motion(r))).join("");
       }
-      root.innerHTML = view.folio.map((r) =>
-        `<div class="card ${escapeHtml(r.mark)}"><div class="mark ${escapeHtml(r.mark)}">${escapeHtml(r.mark)}</div><div class="label">${escapeHtml(r.label)}</div></div>`
-      ).join("");
+      plates.commit(view.folio);
     }
     tick();
     setInterval(tick, 4000);

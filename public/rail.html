@@ -3,32 +3,34 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=318" />
+  <link rel="icon" href="data:," />
   <title>Gloss · rail</title>
   <link rel="stylesheet" href="/gloss.css" />
+  <script src="/gloss.js"></script>
 </head>
 <body>
   <div class="narrow">
-    <div class="wordmark"><b>Gloss</b> rail</div>
-    <div id="root"><div class="empty">□</div></div>
+    <div class="tape" aria-hidden="true"></div>
+    <div class="narrow-head">
+      <div class="wordmark"><b>Gloss</b> rail</div>
+      <div class="tagline">What the room alleges. Three live at most.</div>
+    </div>
+    <div id="root" class="stagger"><div class="empty">□</div></div>
   </div>
   <script>
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, (c) => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-      }[c]));
-    }
+    const plates = Gloss.tracker();
     async function tick() {
       const view = await fetch("/v1/rail").then((r) => r.json());
       const root = document.getElementById("root");
       const cite = view.citation ? ` · f${view.citation.frame_seq}` : " · □";
       document.querySelector(".wordmark").innerHTML = "<b>Gloss</b> rail" + cite;
+      if (!plates.changed(Gloss.keyOf(view.live))) return;
       if (!view.live.length) {
         root.innerHTML = '<div class="empty">□ no live readings</div>';
-        return;
+      } else {
+        root.innerHTML = view.live.map((r) => Gloss.slip(r, plates.motion(r))).join("");
       }
-      root.innerHTML = view.live.map((r) =>
-        `<div class="card ${escapeHtml(r.mark)}"><div class="mark ${escapeHtml(r.mark)}">${escapeHtml(r.mark)}</div><div class="label">${escapeHtml(r.label)}</div></div>`
-      ).join("");
+      plates.commit(view.live);
     }
     tick();
     setInterval(tick, 2500);
