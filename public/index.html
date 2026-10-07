@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:," />
+  <title>Gloss · marginal readings of the live tape</title>
+  <meta name="description" content="Gloss holds what the room alleges about a short window of live tape. It does not recap, speak in chat, or crown a reading." />
+  <!-- Relative on purpose: works from the Gloss server, a static server, or file://. -->
+  <link rel="stylesheet" href="gloss.css" />
+  <style>
+    body.landing { min-width: 360px; }
+    a { color: inherit; }
+    .wrapx { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+
+    /* nav */
+    .top {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; border-bottom: 1px solid rgba(241, 236, 224, 0.07);
+    }
+    .top nav { display: flex; gap: 4px; }
+    .top nav a {
+      text-decoration: none; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--mute); padding: 8px 12px; border-radius: 999px; border: 1px solid transparent;
+      transition: color 160ms ease, border-color 160ms ease;
+    }
+    .top nav a:hover { color: var(--ink); border-color: var(--glass-edge); }
+
+    /* hero */
+    .hero {
+      display: grid; grid-template-columns: minmax(0, 1fr) 610px; gap: 48px;
+      min-height: calc(100vh - 64px); align-items: center; padding: 28px 0 36px;
+    }
+    .kicker { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--hold); margin: 0 0 18px; display: flex; align-items: center; gap: 12px; }
+    .kicker::before { content: ""; width: 24px; height: 1px; background: var(--hold); opacity: 0.7; }
+    h1.display {
+      font: 400 54px/1.04 var(--serif); letter-spacing: -0.015em; margin: 0 0 20px; color: var(--ink);
+      text-wrap: balance;
+    }
+    h1.display em { font-style: italic; color: var(--ink-2); }
+    .lede { font-size: 16px; line-height: 1.6; color: var(--ink-2); max-width: 470px; margin: 0 0 26px; }
+    .cta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+      padding: 11px 18px; border-radius: 3px; border: 1px solid var(--line);
+      font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink);
+      background: rgba(241, 236, 224, 0.03); transition: border-color 160ms ease, background-color 160ms ease;
+    }
+    .btn:hover { border-color: rgba(241, 236, 224, 0.5); }
+    .btn.primary { color: var(--hold); border-color: rgba(226, 192, 114, 0.5); background: linear-gradient(180deg, rgba(226, 192, 114, 0.12), rgba(226, 192, 114, 0.03)); }
+
+    /* OBS caption preview */
+    .obs { margin: 0; max-width: 430px; }
+    .obs-screen {
+      position: relative; aspect-ratio: 16 / 9; border-radius: 4px; overflow: hidden;
+      border: 1px solid var(--line); background: #0d0e11;
+      box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.9);
+    }
+    .obs-screen > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .obs-screen .over { position: absolute; left: 14px; bottom: 12px; right: 90px; }
+    .obs-screen .over .wordmark { font-size: 8px; }
+    .obs-screen .over .wordmark::after { margin-top: 5px; width: 20px; }
+    .obs-screen .over .caption-line { margin-top: 6px; padding: 7px 12px 9px 14px; }
+    .obs-screen .over .caption-line .label { font-size: 15px; }
+    .obs-screen .over .caption-line.is-empty .empty { font-size: 20px; }
+    .obs figcaption { margin-top: 10px; font-size: 11px; color: var(--mute); letter-spacing: 0.04em; }
+    .obs figcaption code, .mono { font-family: var(--mono); font-size: 11px; color: var(--ink-2); }
+
+    /* stage */
+    .hstage {
+      position: relative; height: 600px; border-radius: 6px;
+      border: 1px solid rgba(241, 236, 224, 0.08);
+      background:
+        radial-gradient(400px 300px at 22% 50%, rgba(226, 192, 114, 0.06), transparent 70%),
+        linear-gradient(180deg, rgba(20, 20, 24, 0.6), rgba(10, 10, 12, 0.6));
+      overflow: hidden;
+    }
+    .projection {
+      position: absolute; inset: -20%; pointer-events: none;
+      background:
+        radial-gradient(260px 200px at 60% 30%, rgba(143, 184, 152, 0.14), transparent 70%),
+        radial-gradient(240px 220px at 70% 75%, rgba(215, 109, 97, 0.10), transparent 70%),
+        radial-gradient(300px 220px at 45% 55%, rgba(226, 192, 114, 0.10), transparent 70%);
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    @keyframes drift { from { transform: translate3d(-3%, -2%, 0); } to { transform: translate3d(3%, 2%, 0); } }
+    .demo-tag {
+      position: absolute; top: 14px; right: 14px; z-index: 3;
+      font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mute);
+      padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(8, 8, 10, 0.7);
+    }
+    .htape {
+      position: absolute; left: 36px; top: 0; bottom: 0; width: 150px; overflow: hidden;
+      border-left: 1px solid var(--line); border-right: 1px solid var(--line);
+      background: #0c0c0f;
+    }
+    .htape::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(180deg, #0a0a0c, transparent 16%, transparent 84%, #0a0a0c);
+    }
+    .reel {
+      position: absolute; left: 0; right: 0; top: 0; padding: 0 20px;
+      background:
+        linear-gradient(180deg, transparent 0 8px, rgba(241, 236, 224, 0.14) 8px 17px, transparent 17px) left 6px top 0 / 8px 24px repeat-y,
+        linear-gradient(180deg, transparent 0 8px, rgba(241, 236, 224, 0.14) 8px 17px, transparent 17px) right 6px top 0 / 8px 24px repeat-y,
+        repeating-linear-gradient(180deg, #17181c 0 88px, #0c0c0f 88px 96px);
+      will-change: transform;
+      animation: reel 30s linear infinite;
+    }
+    .reel .frame { height: 88px; margin-bottom: 8px; overflow: hidden; opacity: 0.85; }
+    .reel .frame svg { display: block; width: 100%; height: 100%; }
+    @keyframes reel { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, -50%, 0); } }
+    .hgate {
+      position: absolute; left: 28px; width: 166px; top: 204px; height: 192px; z-index: 2; pointer-events: none;
+    }
+    .hgate::before, .hgate::after {
+      content: ""; position: absolute; left: 0; right: 0; height: 16px;
+      border: 1px solid rgba(226, 192, 114, 0.6); transition: border-color 500ms ease;
+    }
+    .hgate::before { top: 0; border-bottom: 0; }
+    .hgate::after { bottom: 0; border-top: 0; }
+    .hgate.has-facts::before, .hgate.has-facts::after { border-color: rgba(143, 184, 152, 0.85); }
+    .hgate .gl {
+      position: absolute; top: calc(100% + 10px); left: 8px; right: 8px; text-align: center;
+      padding: 6px 4px; border: 1px solid var(--line); border-radius: 3px; background: rgba(8, 8, 10, 0.9);
+      font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mute); line-height: 1.6;
+    }
+    .hgate .gl b { display: block; font-weight: 500; letter-spacing: 0.06em; text-transform: none; font-size: 11px; color: var(--ink-2); transition: color 500ms ease; }
+    .hgate.has-facts .gl b { color: var(--bound); }
+    .hgate.tap { animation: tap 700ms var(--ease-settle); }
+    @keyframes tap { 0% { transform: scale(1.04); } 100% { transform: none; } }
+
+    .hmargin { position: absolute; left: 240px; right: 28px; top: 72px; z-index: 2; }
+    .hmargin .card, .hmargin .slot { min-height: 118px; margin-bottom: 18px; }
+    .hmargin .card { padding: 15px 18px 14px 22px; transition: opacity 600ms ease, transform 600ms var(--ease-settle); }
+    .hmargin .card::after {
+      content: ""; position: absolute; top: 24px; right: 100%; width: 46px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--tone)); opacity: 0.6;
+    }
+    .hmargin .label { font-size: 18px; }
+    .hmargin .slot { display: flex; align-items: center; padding: 0 22px; position: relative; }
+    .hmargin .wrapcard { position: relative; }
+    .hmargin .wrapcard > .slot { position: absolute; inset: 0 0 auto 0; margin: 0; height: 118px; transition: opacity 400ms ease; }
+    .hmargin .wrapcard > .card.is-off { opacity: 0; transform: translate3d(0, 8px, 0); }
+    .hmargin .wrapcard > .card:not(.is-off) + .slot { opacity: 0; }
+    .hmargin .card.closed { opacity: 0.5; }
+    .hmargin .bar > i { transition: width 900ms var(--ease-settle); }
+
+    .hstep {
+      position: absolute; left: 240px; right: 28px; bottom: 22px; z-index: 2;
+      display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--ink-2);
+    }
+    .hstep .dots { display: flex; gap: 6px; flex: none; }
+    .hstep .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); transition: background-color 300ms ease; }
+    .hstep .dots i.on { background: var(--hold); }
+    .hstep span { font-family: var(--serif); font-style: italic; font-size: 14px; transition: opacity 300ms ease; }
+
+    /* sections */
+    section.band { padding: 72px 0; border-top: 1px solid rgba(241, 236, 224, 0.06); }
+    .band h2.title { font: 400 30px/1.15 var(--serif); letter-spacing: -0.01em; color: var(--ink); text-transform: none; margin: 0 0 8px; display: block; }
+    .band h2.title::after { display: none; }
+    .band .sub { color: var(--mute); margin: 0 0 32px; max-width: 620px; }
+    .legend { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .legend .card { margin: 0; min-height: 132px; }
+    .legend .card p { margin: 10px 0 0; color: var(--ink-2); font-size: 13px; line-height: 1.5; }
+    .legend .card.closed { opacity: 1; }
+    .legend .card.closed .mark { color: #9a958c; }
+    .rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .rule { padding: 20px 22px; border: 1px solid var(--line); border-radius: 3px; background: rgba(17, 17, 20, 0.6); }
+    .rule h3 { margin: 0 0 8px; font: 400 18px/1.25 var(--serif); color: var(--ink); }
+    .rule p { margin: 0; color: var(--ink-2); font-size: 13px; line-height: 1.55; }
+    .rule .sq { display: inline-block; font-size: 18px; color: var(--ink); margin-right: 6px; }
+    .notin { margin-top: 26px; color: var(--mute); font-size: 13px; }
+    .notin b { color: var(--ink-2); font-weight: 500; }
+    .surfaces { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+    .surface {
+      display: block; text-decoration: none; padding: 20px 18px 18px; border-radius: 3px;
+      border: 1px solid var(--line); background: rgba(17, 17, 20, 0.6); position: relative; overflow: hidden;
+      transition: border-color 200ms ease, transform 200ms var(--ease-settle);
+    }
+    .surface:hover { border-color: rgba(226, 192, 114, 0.5); transform: translateY(-2px); }
+    .surface .path { font-family: var(--mono); font-size: 13px; color: var(--hold); }
+    .surface h3 { margin: 10px 0 6px; font: 400 19px/1.2 var(--serif); color: var(--ink); }
+    .surface p { margin: 0; font-size: 12px; color: var(--mute); line-height: 1.5; }
+    .surface .go { margin-top: 14px; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-2); }
+    @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .rule, .surface { background-color: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-color: var(--glass-edge); box-shadow: inset 0 1px 0 var(--glass-hi); }
+    }
+    footer.foot { padding: 28px 0 40px; border-top: 1px solid rgba(241, 236, 224, 0.06); color: var(--mute); font-size: 12px; display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+
+    @media (max-width: 1120px) {
+      .hero { grid-template-columns: 1fr; }
+      .hstage { max-width: 610px; }
+      .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .rules { grid-template-columns: 1fr 1fr; }
+      .surfaces { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 680px) {
+      .wrapx { padding: 0 18px; }
+      .top nav { display: none; }
+      h1.display { font-size: 40px; }
+      .hstage { height: 560px; }
+      .htape { left: 12px; width: 90px; }
+      .hgate { left: 6px; width: 102px; }
+      .hmargin, .hstep { left: 128px; right: 12px; }
+      .legend, .rules, .surfaces { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="landing">
+  <div class="wrapx">
+    <div class="top">
+      <div class="wordmark"><b>Gloss</b></div>
+      <nav aria-label="Surfaces">
+        <a href="/dock">Dock</a><a href="/rail">Rail</a><a href="/folio">Folio</a><a href="/caption">Caption</a><a href="/second">Second</a>
+      </nav>
+    </div>
+
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="kicker">A margin for the stream</p>
+        <h1 class="display">Marginal readings<br /><em>of the live tape.</em></h1>
+        <p class="lede">Gloss holds what the room alleges about a short window of tape. It does not recap the stream, speak in chat, score, or crown a reading.</p>
+        <div class="cta">
+          <a class="btn primary" href="/dock">Open the dock</a>
+          <a class="btn" href="/rail">Rail</a>
+          <a class="btn" href="/caption">Caption</a>
+        </div>
+        <figure class="obs">
+          <div class="obs-screen" id="obs">
+            <div class="over">
+              <div class="wordmark"><b>Gloss</b> caption</div>
+              <div id="demo-caption" class="caption-line is-empty"><div class="empty">□</div></div>
+            </div>
+          </div>
+          <figcaption>Caption overlay: the held reading, else <span class="mono">□</span>. Demo frame.</figcaption>
+        </figure>
+      </div>
+
+      <div class="hstage" role="img" aria-label="Demo with fixture text, not live: tape advances, three readings open in the margin, window facts settle their marks, one is held and shown on the caption.">
+        <div class="projection" aria-hidden="true"></div>
+        <div class="demo-tag">Demo · fixture text · not live</div>
+        <div class="htape" aria-hidden="true"><div class="reel" id="reel"></div></div>
+        <div class="hgate" id="hgate" aria-hidden="true"><div class="gl">window<b id="hgate-b">12s · no facts</b></div></div>
+        <div class="hmargin" id="hmargin" aria-hidden="true"></div>
+        <div class="hstep" aria-live="off"><div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i><i></i></div><span id="step">Tape advances. Nothing alleged yet.</span></div>
+      </div>
+    </header>
+  </div>
+
+  <section class="band">
+    <div class="wrapx">
+      <h2 class="title">Marks</h2>
+      <p class="sub">Each reading carries one mark. Shape and color both say it, so a mark reads in a glance and in grayscale.</p>
+      <div class="legend">
+        <div class="card open"><div class="mark open">open</div><p>Alleged by the room. Nothing in the window binds it yet.</p></div>
+        <div class="card bound"><div class="mark bound">bound</div><p>Window facts support it. No facts, never Bound. A citation is not Bound.</p></div>
+        <div class="card thin"><div class="mark thin">thin</div><p>A claim with little in the window to carry it.</p></div>
+        <div class="card split"><div class="mark split">split</div><p>More than one live reading on the same window.</p></div>
+        <div class="card clash"><i class="press" aria-hidden="true"></i><div class="mark clash">clash</div><p>Support and contradiction both high. Two pressures. Neither is crowned.</p></div>
+        <div class="card echo"><div class="mark echo">echo</div><p>The same reading in other words. Identity, not proof.</p></div>
+        <div class="card closed"><div class="mark closed">closed</div><p>Out of the live three. Kept in the folio.</p></div>
+        <div class="card hold"><div class="mark hold">hold</div><p>Held by the operator for tape. The caption shows only this.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrapx">
+      <h2 class="title">How the margin behaves</h2>
+      <p class="sub">Rules from the constitution. The surfaces follow them; the design only makes them visible.</p>
+      <div class="rules">
+        <div class="rule"><h3>Three live readings</h3><p>Opening a fourth is forbidden. Merge or close first. Empty places show as vacant slots.</p></div>
+        <div class="rule"><h3>Bound needs the window</h3><p>Bound requires window facts. Score, clock, down, and lead are claims of type <span class="mono">state</span>.</p></div>
+        <div class="rule"><h3><span class="sq">□</span>An honest empty frame</h3><p>The caption is the held live reading. No Hold, it shows □. Nothing is filled in.</p></div>
+        <div class="rule"><h3>Glass is off by default</h3><p>On, a reading may show <span class="mono">clock_ns</span> and <span class="mono">frame_seq</span> from a tapped window. Missing, malformed, or <span class="mono">same_seq</span> false renders □. A citation is not evidence.</p></div>
+        <div class="rule"><h3>Second is a bind</h3><p>A viewer binds to a live reading. Not a vote. Not a new slot.</p></div>
+        <div class="rule"><h3>Folio</h3><p>The last closed session that has readings. Closed Holds stay in the folio.</p></div>
+      </div>
+      <p class="notin"><b>Out of product:</b> recaps, chat bots, a winner, a fourth live reading, game APIs, live X polling, writing into Qoresence.</p>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrapx">
+      <h2 class="title">Surfaces</h2>
+      <p class="sub">Served by the Gloss server on <span class="mono">127.0.0.1:8788</span>. They read the same session.</p>
+      <div class="surfaces">
+        <a class="surface" href="/dock"><div class="path">/dock</div><h3>Dock</h3><p>Operator. Pulse, window, Hold, X tape, Cite Q.</p><div class="go">Open →</div></a>
+        <a class="surface" href="/rail"><div class="path">/rail</div><h3>Rail</h3><p>Live readings. 318px.</p><div class="go">Open →</div></a>
+        <a class="surface" href="/folio"><div class="path">/folio</div><h3>Folio</h3><p>Last closed session that has readings.</p><div class="go">Open →</div></a>
+        <a class="surface" href="/caption"><div class="path">/caption</div><h3>Caption</h3><p>Held reading only. Else □. OBS Browser Source, ~480 wide.</p><div class="go">Open →</div></a>
+        <a class="surface" href="/second"><div class="path">/second</div><h3>Second</h3><p>Bind to a live reading. Not a vote.</p><div class="go">Open →</div></a>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrapx">
+    <footer class="foot">
+      <span><b style="color:var(--ink-2);font-weight:500">Gloss</b> · marginal readings of the live tape.</span>
+      <span>The hero is inline demo text, not a live session.</span>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      // Opened from disk: point surface links at the local Gloss server.
+      if (location.protocol === "file:") {
+        document.querySelectorAll('a[href^="/"]').forEach(function (a) {
+          a.href = "http://127.0.0.1:8788" + a.getAttribute("href");
+        });
+      }
+
+      // ── Demo tape frames (inline, deterministic) ──
+      function rng(seed) { return function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+      var tones = ["#8fb898", "#e2c072", "#d76d61", "#8796a6", "#a698d2"];
+      function scene(i, w, h) {
+        var r = rng(i * 7919 + 17);
+        var hz = h * (0.42 + r() * 0.22), tilt = (r() - 0.5) * h * 0.18;
+        var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="xMidYMid slice">';
+        s += '<rect width="' + w + '" height="' + h + '" fill="#15161a"/>';
+        s += '<rect width="' + w + '" height="' + hz + '" fill="#1b1c21"/>';
+        s += '<path d="M0 ' + hz + " L" + w + " " + (hz + tilt) + " L" + w + " " + h + " L0 " + h + 'Z" fill="#121316"/>';
+        s += '<path d="M0 ' + hz + " L" + w + " " + (hz + tilt) + '" stroke="#f1ece0" stroke-opacity=".12" stroke-width="' + (w / 160) + '"/>';
+        var n = (w > 300 ? 4 : 2) + Math.floor(r() * 3);
+        for (var k = 0; k < n; k++) {
+          var cx = w * (0.12 + r() * 0.76), cy = hz + (h - hz) * (0.2 + r() * 0.6);
+          s += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + (w / 70).toFixed(1) + '" fill="' + (k === 0 ? tones[i % tones.length] : "#cdc7b8") + '" fill-opacity="' + (k === 0 ? 0.6 : 0.35) + '"/>';
+        }
+        var sx = w * r() * 0.6, sy = h * (0.25 + r() * 0.5);
+        s += '<path d="M' + sx.toFixed(1) + " " + sy.toFixed(1) + " l" + (w * 0.3).toFixed(1) + " " + (-(h * 0.08)).toFixed(1) + '" stroke="#f1ece0" stroke-opacity=".18" stroke-width="' + (w / 200) + '" stroke-linecap="round"/>';
+        s += "</svg>";
+        return s;
+      }
+      var reel = document.getElementById("reel");
+      var frames = "";
+      for (var i = 0; i < 10; i++) frames += '<div class="frame">' + scene(i, 160, 100) + "</div>";
+      reel.innerHTML = frames + frames; // two copies: -50% loops seamlessly
+      document.getElementById("obs").insertAdjacentHTML("afterbegin", scene(3, 640, 360));
+
+      // ── Demo readings: inline fixture text, not a live session ──
+      var DEMO = [
+        { label: "that rotate was a bait they sold mid", type: "bait" },
+        { label: "he threw the round completely", type: "collapse" },
+        { label: "insane outplay on the parry", type: "outplay" },
+      ];
+      var margin = document.getElementById("hmargin");
+      margin.innerHTML = DEMO.map(function (d, i) {
+        return '<div class="wrapcard"><article class="card open is-off" id="p' + i + '">' +
+          '<i class="press"></i><div class="mark open">open</div>' +
+          '<div class="label">' + d.label + '</div><div class="meta">' + d.type + '</div>' +
+          '<div class="bar"><i style="width:12%"></i></div></article><div class="slot">vacant</div></div>';
+      }).join("");
+      var plates = [0, 1, 2].map(function (i) { return document.getElementById("p" + i); });
+      var gate = document.getElementById("hgate"), gateB = document.getElementById("hgate-b");
+      var cap = document.getElementById("demo-caption");
+      var stepEl = document.getElementById("step");
+      var dots = document.querySelectorAll("#dots i");
+
+      function mark(i, m, pct) {
+        var p = plates[i];
+        p.className = "card " + m + " is-remarked";
+        var mk = p.querySelector(".mark");
+        mk.className = "mark " + m;
+        mk.textContent = m;
+        if (pct != null) p.querySelector(".bar > i").style.width = pct + "%";
+      }
+      function show(i) { plates[i].className = "card open is-new"; }
+      function caption(i) {
+        if (i == null) { cap.className = "caption-line is-empty is-new"; cap.innerHTML = '<div class="empty">□</div>'; return; }
+        cap.className = "caption-line is-new";
+        cap.innerHTML = '<div class="mark hold">hold</div><div class="label">' + DEMO[i].label + "</div>";
+      }
+      function facts(on) {
+        gate.classList.toggle("has-facts", on);
+        gateB.textContent = on ? "12s · facts" : "12s · no facts";
+        if (on) { gate.classList.remove("tap"); void gate.offsetWidth; gate.classList.add("tap"); }
+      }
+      function step(n, text) {
+        stepEl.textContent = text;
+        dots.forEach(function (d, k) { d.classList.toggle("on", k <= n); });
+      }
+      function reset() {
+        plates.forEach(function (p) { p.className = "card open is-off"; var mk = p.querySelector(".mark"); mk.className = "mark open"; mk.textContent = "open"; p.querySelector(".bar > i").style.width = "12%"; });
+        facts(false); caption(null); cap.classList.remove("is-new");
+        step(0, "Tape advances. Nothing alleged yet.");
+      }
+      var TIMELINE = [
+        [0, reset],
+        [900, function () { show(0); step(1, "The room alleges. A reading opens in the margin."); }],
+        [2000, function () { show(1); }],
+        [3100, function () { show(2); step(2, "Three live readings. There is no fourth slot."); }],
+        [4700, function () { facts(true); mark(0, "bound", 46); mark(1, "thin", 18); mark(2, "clash", 38); step(3, "Window facts tapped. Bound, Thin, Clash."); }],
+        [7300, function () { mark(0, "hold"); caption(0); step(4, "The operator holds one. The caption shows only that."); }],
+        [10300, function () { mark(1, "closed"); mark(2, "closed"); caption(null); step(5, "Session closes. The folio keeps the Hold. Caption returns to □."); }],
+        [13400, function () { plates.forEach(function (p) { p.classList.add("is-off"); }); }],
+      ];
+      var LOOP = 14400, timers = [];
+      function run() {
+        timers.forEach(clearTimeout); timers = [];
+        TIMELINE.forEach(function (t) { timers.push(setTimeout(t[1], t[0])); });
+        timers.push(setTimeout(run, LOOP));
+      }
+      function still() {
+        // Reduced motion: one settled state, no loop.
+        timers.forEach(clearTimeout); timers = [];
+                mark(0, "hold", 46); mark(1, "thin", 18); mark(2, "clash", 38);
+        plates.forEach(function (p) { p.classList.remove("is-remarked"); });
+        gate.classList.add("has-facts"); gateB.textContent = "12s · facts";
+        caption(0); cap.classList.remove("is-new");
+        step(4, "Held reading on the caption. Bound, Thin, and Clash stay in the margin.");
+      }
+      var rm = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+      function start() { if (rm && rm.matches) still(); else run(); }
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) { timers.forEach(clearTimeout); timers = []; } else start();
+      });
+      if (rm && rm.addEventListener) rm.addEventListener("change", start);
+      start();
+    })();
+  </script>
+</body>
+</html>

@@ -106,7 +106,12 @@ async function readBody(req: import("node:http").IncomingMessage) {
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", `http://127.0.0.1:${PORT}`);
   try {
-    if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/dock")) {
+    if (req.method === "GET" && url.pathname === "/") {
+      res.writeHead(200, { "Content-Type": MIME[".html"] });
+      res.end(readFileSync(join(ROOT, "public/index.html")));
+      return;
+    }
+    if (req.method === "GET" && url.pathname === "/dock") {
       res.writeHead(200, { "Content-Type": MIME[".html"] });
       res.end(readFileSync(join(ROOT, "public/dock.html")));
       return;
