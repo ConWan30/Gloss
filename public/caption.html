@@ -1,15 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="caption-doc">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:," />
   <title>Gloss · caption</title>
   <link rel="stylesheet" href="/gloss.css" />
 </head>
 <body class="caption">
   <div class="wrap" style="padding:12px 16px">
     <div class="wordmark"><b>Gloss</b> caption</div>
-    <div id="root" class="caption-line"><div class="empty">□</div></div>
+    <div id="root" class="caption-line is-empty"><div class="empty">□</div></div>
   </div>
   <script>
     function escapeHtml(s) {
@@ -17,15 +18,22 @@
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
       }[c]));
     }
+    let last = "";
     async function tick() {
       const view = await fetch("/v1/caption").then((r) => r.json());
       const root = document.getElementById("root");
       const cite = view.citation ? ` · f${view.citation.frame_seq}` : "";
       document.querySelector(".wordmark").innerHTML = "<b>Gloss</b> caption" + cite;
+      const key = view.caption ? view.caption.id + "|" + view.caption.mark + "|" + view.caption.label : "□";
+      if (key === last) return; // unchanged: no repaint, no motion
+      const first = last === "";
+      last = key;
       if (!view.caption) {
+        root.className = "caption-line is-empty" + (first ? "" : " is-new");
         root.innerHTML = '<div class="empty">□</div>';
         return;
       }
+      root.className = "caption-line" + (first ? "" : " is-new");
       root.innerHTML =
         `<div class="mark ${escapeHtml(view.caption.mark)}">${escapeHtml(view.caption.mark)}</div>` +
         `<div class="label">${escapeHtml(view.caption.label)}</div>`;
