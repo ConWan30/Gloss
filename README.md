@@ -25,6 +25,7 @@ npm start
 
 | URL | What |
 | --- | --- |
+| http://127.0.0.1:8788/ | Landing. What Gloss is, with a demo hero. Not live. |
 | http://127.0.0.1:8788/dock | Operator. Pulse, window, Hold, X tape, Cite Q. |
 | http://127.0.0.1:8788/rail | Live readings. 318px. |
 | http://127.0.0.1:8788/folio | Last closed session that has readings. |
@@ -46,3 +47,5 @@ Open · Bound · Thin · Split · Clash · Echo · Closed · Hold
 Bound requires window facts. A citation is not Bound. Score, clock, down, and lead are claims of type `state`.
 
 Three live readings. Same post ids do not pulse twice. X tape attaches to the open session.
+
+Design language, glyphs, and motion rules: `docs/MOTION_NOTES.md`.

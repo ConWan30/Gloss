@@ -1,22 +1,50 @@
+/* Gloss varnish sheet.
+   Dark live-tape backdrop. Readings are glass plates in its margin.
+   Design notes: docs/MOTION_NOTES.md */
+
 :root {
-  --void: #09090b;
-  --iron: #141417;
-  --plate: #1c1d21;
-  --line: #2a2b30;
-  --ink: #f3efe4;
-  --mute: #8b867a;
-  --sheen: rgba(243, 239, 228, 0.1);
-  --glass: rgba(20, 20, 23, 0.55);
-  --glass-edge: rgba(243, 239, 228, 0.16);
-  --hold: #d4b36a;
-  --clash: #c45a5a;
-  --thin: #7a8794;
-  --bound: #7a9a80;
-  --split: #c4894a;
-  --echo: #8a7eb0;
-  --open: #a8a39a;
-  --serif: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
-  --sans: "Segoe UI", system-ui, sans-serif;
+  --void: #08080a;
+  --iron: #111114;
+  --plate: #17181c;
+  --plate-2: #1d1e23;
+  --line: #2a2b31;
+  --ink: #f1ece0;
+  --ink-2: #cdc7b8;
+  --mute: #918b7e;
+  --faint: #5d5951;
+  --sheen: rgba(241, 236, 224, 0.08);
+  --glass: rgba(18, 18, 22, 0.58);
+  --glass-strong: rgba(16, 16, 20, 0.74);
+  --glass-edge: rgba(241, 236, 224, 0.14);
+  --glass-hi: rgba(241, 236, 224, 0.16);
+
+  /* Marks. One hue each, kept quiet. */
+  --open: #b4aea2;
+  --bound: #8fb898;
+  --thin: #8796a6;
+  --split: #d39c5c;
+  --clash: #d76d61;
+  --echo: #a698d2;
+  --closed: #77726a;
+  --hold: #e2c072;
+  --tone: var(--open);
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: system-ui, "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, Menlo, monospace;
+
+  --ease-settle: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --frame: 96px; /* one tape frame */
+
+  /* Glyph masks. Shape carries the mark; color repeats it. */
+  --g-open: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='5.25' fill='none' stroke='black' stroke-width='1.5'/></svg>");
+  --g-bound: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='5.25' fill='none' stroke='black' stroke-width='1.5'/><circle cx='8' cy='8' r='2.25' fill='black'/></svg>");
+  --g-thin: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='5.25' fill='none' stroke='black' stroke-width='1.5' stroke-dasharray='1.7 2.4'/></svg>");
+  --g-split: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='5.25' fill='none' stroke='black' stroke-width='1.5'/><path d='M8 2.75a5.25 5.25 0 0 0 0 10.5z' fill='black'/></svg>");
+  --g-clash: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M1.25 3.25 7 8l-5.75 4.75zM14.75 3.25 9 8l5.75 4.75z' fill='black'/></svg>");
+  --g-echo: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='5.9' cy='8' r='4' fill='none' stroke='black' stroke-width='1.4'/><circle cx='10.1' cy='8' r='4' fill='none' stroke='black' stroke-width='1.4'/></svg>");
+  --g-closed: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='5.25' fill='none' stroke='black' stroke-width='1.5'/><path d='M4.5 8h7' stroke='black' stroke-width='1.5'/></svg>");
+  --g-hold: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill-rule='evenodd' d='M8 1 15 8 8 15 1 8zM8 3.4 12.6 8 8 12.6 3.4 8zM8 5.6 10.4 8 8 10.4 5.6 8z' fill='black'/></svg>");
 }
 
 * { box-sizing: border-box; }
@@ -25,7 +53,13 @@ html, body {
   background: var(--void);
   color: var(--ink);
   font: 14px/1.45 var(--sans);
+  -webkit-font-smoothing: antialiased;
 }
+/* OBS reads the root background too. The caption page stays clear. */
+html.caption-doc,
+body.caption { background: transparent; }
+
+/* Backdrop: low light leaking from the tape. Not on caption. */
 body:not(.caption)::before {
   content: "";
   position: fixed;
@@ -33,12 +67,28 @@ body:not(.caption)::before {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(900px 480px at 12% -10%, rgba(212, 179, 106, 0.07), transparent 55%),
-    radial-gradient(700px 500px at 110% 80%, rgba(122, 154, 128, 0.05), transparent 50%);
+    radial-gradient(820px 520px at 8% -12%, rgba(226, 192, 114, 0.075), transparent 60%),
+    radial-gradient(760px 560px at 108% 92%, rgba(143, 184, 152, 0.05), transparent 55%),
+    radial-gradient(600px 400px at 50% 120%, rgba(166, 152, 210, 0.04), transparent 60%),
+    linear-gradient(180deg, #0b0b0e, var(--void) 40%);
+}
+/* Faint grain so glass has something to catch. Static. */
+body:not(.caption)::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(241, 236, 224, 0.012) 0 1px, transparent 1px 3px);
 }
 body > * { position: relative; z-index: 1; }
-body.caption { background: transparent; }
 
+::selection { background: rgba(226, 192, 114, 0.3); color: var(--ink); }
+:focus-visible { outline: 1px solid var(--hold); outline-offset: 2px; }
+
+/* ── Wordmark ─────────────────────────────────────────── */
 .wordmark {
   font: 500 11px/1 var(--sans);
   letter-spacing: 0.28em;
@@ -47,7 +97,7 @@ body.caption { background: transparent; }
 }
 .wordmark b {
   color: var(--ink);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.34em;
 }
 .wordmark::after {
@@ -56,175 +106,642 @@ body.caption { background: transparent; }
   width: 28px;
   height: 1px;
   margin-top: 8px;
-  background: linear-gradient(90deg, var(--ink), transparent);
-  opacity: 0.45;
+  background: linear-gradient(90deg, var(--hold), transparent);
+  opacity: 0.6;
+}
+.tagline {
+  font: italic 14px/1.3 var(--serif);
+  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
 }
 
+/* ── Mast ─────────────────────────────────────────────── */
 header.mast, footer.mast {
-  padding: 18px 24px;
+  padding: 16px 24px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-size: 11px;
   color: var(--mute);
 }
 header.mast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
   border-bottom: 1px solid var(--glass-edge);
-  background: linear-gradient(180deg, var(--sheen), transparent 50%);
+  background: linear-gradient(180deg, var(--sheen), transparent 70%), rgba(14, 14, 17, 0.9);
 }
-footer.mast { border-top: 1px solid var(--line); }
+.mast-id { display: flex; align-items: flex-end; gap: 22px; }
+.mast-id .tagline { padding-bottom: 9px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 11px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(241, 236, 224, 0.03);
+  border-radius: 999px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+}
+.chip > span { color: var(--ink); letter-spacing: 0.08em; text-transform: none; font-size: 12px; }
+.chip.cite > span { font-family: var(--mono); font-size: 11px; }
+footer.mast {
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+footer.mast::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bound);
+  box-shadow: 0 0 0 3px rgba(143, 184, 152, 0.12);
+  flex: none;
+}
 
+/* ── Dock shell ───────────────────────────────────────── */
 .shell {
   display: grid;
-  grid-template-columns: 1fr 300px;
-  min-height: calc(100vh - 104px);
+  grid-template-columns: minmax(0, 1fr) 340px;
+  min-height: calc(100vh - 116px);
 }
-.stage { padding: 24px; }
+.stage {
+  position: relative;
+  padding: 28px 32px 32px 168px;
+  overflow: hidden;
+}
+/* Light spilling off the tape so the glass has something to frost. */
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(420px 260px at 150px 180px, rgba(226, 192, 114, 0.08), transparent 70%),
+    radial-gradient(520px 320px at 70% 70%, rgba(143, 184, 152, 0.05), transparent 70%),
+    radial-gradient(380px 240px at 85% 15%, rgba(166, 152, 210, 0.045), transparent 70%);
+}
+.stage-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0 0 16px;
+  max-width: 780px;
+}
+.stage-head h1 {
+  margin: 0;
+  font: 400 13px/1 var(--sans);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.stage-head .meta { letter-spacing: 0.04em; }
+.stage #live { max-width: 780px; }
+.stage-head, .stage #live { position: relative; z-index: 1; }
+
 .margin {
   border-left: 1px solid var(--glass-edge);
-  padding: 24px;
-  background: rgba(20, 20, 23, 0.72);
+  padding: 22px 22px 28px;
+  background: rgba(17, 17, 20, 0.86);
+}
+.panel { padding: 0 0 18px; margin: 0 0 18px; border-bottom: 1px solid var(--line); }
+.panel:last-child { border-bottom: 0; margin-bottom: 0; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.row > * { margin-bottom: 8px; }
+
+/* ── Live tape ────────────────────────────────────────── */
+/* A strip of film. Frames advance upward; the window bracket stays put. */
+.tape {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+.tape::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(100% + 10 * var(--frame));
+  will-change: transform;
+  animation: tape-advance 48s linear infinite;
+  background:
+    /* sprocket holes */
+    linear-gradient(180deg, transparent 0 8px, rgba(241, 236, 224, 0.13) 8px 18px, transparent 18px) left 6px top 0 / 7px 24px repeat-y,
+    linear-gradient(180deg, transparent 0 8px, rgba(241, 236, 224, 0.13) 8px 18px, transparent 18px) right 6px top 0 / 7px 24px repeat-y,
+    /* frame gates */
+    linear-gradient(180deg, rgba(8, 8, 10, 0.95) 0 4px, transparent 4px) 0 0 / 100% var(--frame) repeat-y,
+    /* exposures: alternating faint scenes */
+    linear-gradient(160deg, rgba(143, 184, 152, 0.07), transparent 55%) 0 0 / 100% calc(var(--frame) * 3) repeat-y,
+    linear-gradient(200deg, rgba(226, 192, 114, 0.07), transparent 50%) 0 var(--frame) / 100% calc(var(--frame) * 2) repeat-y,
+    radial-gradient(60% 40% at 50% 60%, rgba(241, 236, 224, 0.06), transparent 70%) 0 0 / 100% var(--frame) repeat-y,
+    linear-gradient(90deg, #0d0d10 0 20px, #15161a 20px calc(100% - 20px), #0d0d10 calc(100% - 20px));
+}
+.tape::after {
+  /* edges fade into the dark */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--void), transparent 14%, transparent 86%, var(--void));
+}
+.tape.is-still::before { animation: none; }
+@keyframes tape-advance {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, calc(-10 * var(--frame)), 0); }
 }
 
+.stage > .tape { left: 32px; width: 104px; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+
+/* The window: a fixed bracket the tape runs under. */
+.window-gate {
+  position: absolute;
+  left: 26px;
+  width: 116px;
+  top: 84px;
+  height: calc(var(--frame) * 2);
+  pointer-events: none;
+  z-index: 2;
+}
+.window-gate::before,
+.window-gate::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 14px;
+  border: 1px solid rgba(226, 192, 114, 0.55);
+}
+.window-gate::before { top: 0; border-bottom: 0; }
+.window-gate::after { bottom: 0; border-top: 0; }
+.window-gate .gate-label {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 6px;
+  right: 6px;
+  padding: 6px 4px 7px;
+  background: rgba(8, 8, 10, 0.88);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mute);
+  line-height: 1.6;
+}
+.window-gate .gate-label b { display: block; color: var(--ink-2); font-weight: 500; letter-spacing: 0.06em; text-transform: none; font-size: 11px; }
+.window-gate.has-facts .gate-label b { color: var(--bound); }
+.window-gate.has-facts::before,
+.window-gate.has-facts::after { border-color: rgba(143, 184, 152, 0.75); }
+
+/* ── Marks ────────────────────────────────────────────── */
+.mark {
+  --tone: var(--open);
+  --glyph: var(--g-open);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+.mark::before {
+  content: "";
+  width: 13px;
+  height: 13px;
+  flex: none;
+  background: currentColor;
+  -webkit-mask: var(--glyph) center / contain no-repeat;
+  mask: var(--glyph) center / contain no-repeat;
+}
+.mark.open    { --tone: var(--open);   --glyph: var(--g-open); }
+.mark.bound   { --tone: var(--bound);  --glyph: var(--g-bound); }
+.mark.thin    { --tone: var(--thin);   --glyph: var(--g-thin); }
+.mark.split   { --tone: var(--split);  --glyph: var(--g-split); }
+.mark.clash   { --tone: var(--clash);  --glyph: var(--g-clash); }
+.mark.echo    { --tone: var(--echo);   --glyph: var(--g-echo); }
+.mark.closed  { --tone: var(--closed); --glyph: var(--g-closed); }
+.mark.hold    { --tone: var(--hold);   --glyph: var(--g-hold); }
+
+/* ── Plates (readings) ────────────────────────────────── */
 .card {
+  --tone: var(--open);
   position: relative;
   background: var(--plate);
   border: 1px solid var(--line);
-  padding: 16px 18px 16px 20px;
-  margin-bottom: 12px;
+  border-radius: 3px;
+  padding: 16px 18px 16px 22px;
+  margin-bottom: 14px;
 }
+.card.open   { --tone: var(--open); }
+.card.bound  { --tone: var(--bound); }
+.card.thin   { --tone: var(--thin); }
+.card.split  { --tone: var(--split); }
+.card.clash  { --tone: var(--clash); }
+.card.echo   { --tone: var(--echo); }
+.card.closed { --tone: var(--closed); }
+.card.hold   { --tone: var(--hold); }
+
+/* margin rule in the reading's mark color */
 .card::before {
   content: "";
   position: absolute;
-  left: 0; top: 0; bottom: 0;
+  left: -1px;
+  top: -1px;
+  bottom: -1px;
   width: 2px;
-  background: var(--open);
+  background: var(--tone);
+  border-radius: 3px 0 0 3px;
 }
-.card.hold::before { background: var(--hold); }
-.card.clash::before { background: var(--clash); }
-.card.bound::before { background: var(--bound); }
-.card.thin::before { background: var(--thin); }
-.card.split::before { background: var(--split); }
-.card.echo::before { background: var(--echo); }
-.card.open::before, .card.closed::before { background: var(--open); }
+/* Leader line back to the tape (dock only). */
+.stage .card::after {
+  content: "";
+  position: absolute;
+  top: 25px;
+  right: 100%;
+  width: 32px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--tone));
+  opacity: 0.55;
+}
+
+.card.thin { border-style: dashed; }
+.card.thin .label { color: var(--ink-2); }
+.card.split::before {
+  background: linear-gradient(180deg, var(--tone) 0 46%, transparent 46% 54%, var(--tone) 54%);
+}
+.card.echo { box-shadow: 5px 5px 0 -1px rgba(166, 152, 210, 0.14); }
+.card.closed { opacity: 0.62; }
+.card.closed .label { color: var(--ink-2); }
+.card.hold {
+  border-color: rgba(226, 192, 114, 0.45);
+  background: linear-gradient(180deg, rgba(226, 192, 114, 0.07), transparent 60%), var(--plate-2);
+}
+/* Hold pin: the plate is sealed to the margin. Visual only. */
+.card.hold > .mark::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--hold);
+  box-shadow: 0 0 0 3px rgba(226, 192, 114, 0.16), 0 0 10px rgba(226, 192, 114, 0.35);
+}
+/* Clash: two pressures meet at the top edge. */
+.card.clash > .press {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 2px;
+  display: block;
+  pointer-events: none;
+}
+.press::before,
+.press::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  height: 2px;
+  width: 48%;
+}
+.press::before { left: 0; background: linear-gradient(90deg, transparent, var(--clash)); transform-origin: left; }
+.press::after { right: 0; background: linear-gradient(270deg, transparent, var(--clash)); transform-origin: right; }
+.card:not(.clash) > .press { display: none; }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   header.mast,
   .margin,
   .card {
-    background: var(--glass);
-    -webkit-backdrop-filter: blur(16px) saturate(1.15);
-    backdrop-filter: blur(16px) saturate(1.15);
+    background-color: var(--glass);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    backdrop-filter: blur(18px) saturate(1.2);
     border-color: var(--glass-edge);
     box-shadow:
-      inset 0 1px 0 rgba(243, 239, 228, 0.12),
-      0 10px 30px rgba(0, 0, 0, 0.18);
+      inset 0 1px 0 var(--glass-hi),
+      inset 0 0 0 1px rgba(241, 236, 224, 0.02),
+      0 18px 40px -18px rgba(0, 0, 0, 0.7);
   }
-  .narrow .card {
-    background: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    box-shadow: none;
-    border-color: transparent;
-    border-top-color: var(--glass-edge);
+  .card {
+    background-image: linear-gradient(135deg, rgba(241, 236, 224, 0.07), rgba(241, 236, 224, 0.01) 40%, transparent 60%);
   }
-  body.caption .caption-line {
-    padding: 8px 4px 4px;
-    background: rgba(9, 9, 11, 0.28);
-    -webkit-backdrop-filter: blur(12px) saturate(1.1);
-    backdrop-filter: blur(12px) saturate(1.1);
-    border: 1px solid var(--glass-edge);
-    box-shadow: inset 0 1px 0 rgba(243, 239, 228, 0.1);
+  .card.hold {
+    background-color: rgba(30, 27, 20, 0.62);
+    background-image: linear-gradient(180deg, rgba(226, 192, 114, 0.1), transparent 60%);
+    border-color: rgba(226, 192, 114, 0.42);
   }
+  .card.echo {
+    box-shadow:
+      inset 0 1px 0 var(--glass-hi),
+      5px 5px 0 -1px rgba(166, 152, 210, 0.14),
+      0 18px 40px -18px rgba(0, 0, 0, 0.7);
+  }
+  .card.thin { border-color: rgba(135, 150, 166, 0.35); }
+  .margin { background-color: rgba(15, 15, 18, 0.66); }
+  header.mast { background-color: rgba(14, 14, 17, 0.6); }
 }
-
-.mark {
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--mute);
-}
-.mark.hold { color: var(--hold); }
-.mark.clash { color: var(--clash); }
-.mark.thin { color: var(--thin); }
-.mark.bound { color: var(--bound); }
-.mark.split { color: var(--split); }
-.mark.echo { color: var(--echo); }
-.mark.open, .mark.closed { color: var(--open); }
 
 .label {
   font-family: var(--serif);
   font-size: 20px;
-  line-height: 1.28;
-  margin: 8px 0 6px;
+  line-height: 1.3;
+  margin: 9px 0 6px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
 }
 .meta { color: var(--mute); font-size: 12px; }
+.meta .sep { color: var(--faint); margin: 0 6px; }
 .empty {
   color: var(--mute);
   padding: 28px 4px;
   letter-spacing: 0.08em;
 }
 
+.stage .empty {
+  border: 1px dashed rgba(241, 236, 224, 0.12);
+  border-radius: 3px;
+  padding: 46px 24px;
+  text-align: center;
+  font: italic 16px/1.4 var(--serif);
+  letter-spacing: 0.01em;
+  color: var(--mute);
+}
+
+/* Vacant slot: the cap is three. */
+.slot {
+  border: 1px dashed rgba(241, 236, 224, 0.1);
+  border-radius: 3px;
+  padding: 18px 22px;
+  margin-bottom: 14px;
+  color: var(--faint);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
 .bar {
   height: 1px;
   background: var(--line);
   margin-top: 12px;
+  overflow: hidden;
 }
 .bar > i {
   display: block;
   height: 1px;
-  background: var(--ink);
-  opacity: 0.55;
+  background: linear-gradient(90deg, var(--tone), var(--ink));
+  opacity: 0.7;
 }
 
+/* ── Motion: plates settle, open readings breathe ────── */
+.card.is-new { animation: plate-settle 620ms var(--ease-settle) both; }
+.card.is-remarked { animation: plate-remark 700ms var(--ease-settle) both; }
+.card.is-new .bar > i { animation: bar-fill 900ms var(--ease-settle) 120ms both; }
+.card.open > .mark::before { animation: glyph-breathe 3.2s ease-in-out infinite; }
+.card.clash > .press::before { animation: press-l 2.8s ease-in-out infinite; }
+.card.clash > .press::after { animation: press-r 2.8s ease-in-out infinite; }
+.card.hold.is-remarked,
+.card.hold.is-new { animation: plate-seal 900ms var(--ease-settle) both; }
+.stagger > .card:nth-child(2) { animation-delay: 70ms; }
+.stagger > .card:nth-child(3) { animation-delay: 140ms; }
+
+@keyframes plate-settle {
+  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.985); filter: blur(3px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes plate-remark {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone) 45%, transparent); }
+  100% { box-shadow: 0 0 0 10px transparent; }
+}
+@keyframes plate-seal {
+  0% { transform: scale(1.012); border-color: var(--hold); }
+  100% { transform: none; }
+}
+@keyframes bar-fill { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
+@keyframes glyph-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@keyframes press-l { 0%, 100% { transform: scaleX(0.92); } 50% { transform: scaleX(1.03); } }
+@keyframes press-r { 0%, 100% { transform: scaleX(1.03); } 50% { transform: scaleX(0.92); } }
+
+/* ── Controls ─────────────────────────────────────────── */
 h2 {
   font-size: 10px;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--mute);
-  font-weight: 500;
-  margin: 18px 0 10px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-h2:first-child { margin-top: 0; }
+h2::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
 
 textarea, input[type="text"], input:not([type]), button {
   width: 100%;
-  background: rgba(9, 9, 11, 0.55);
+  background: rgba(8, 8, 10, 0.6);
   color: var(--ink);
   border: 1px solid var(--line);
+  border-radius: 3px;
   padding: 9px 10px;
   margin: 0 0 8px;
   font: inherit;
+  transition: border-color 160ms ease, background-color 160ms ease;
 }
-textarea { resize: vertical; min-height: 72px; }
+textarea::placeholder, input::placeholder { color: var(--faint); }
+textarea:focus, input:focus { outline: none; border-color: rgba(226, 192, 114, 0.5); background: rgba(8, 8, 10, 0.8); }
+textarea { resize: vertical; min-height: 64px; }
+input.mono { font-family: var(--mono); font-size: 12px; }
 button {
   cursor: pointer;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   font-size: 10px;
+  font-weight: 600;
+  padding: 10px;
+  background: rgba(241, 236, 224, 0.03);
 }
-button:hover { border-color: var(--ink); }
+button:hover { border-color: rgba(241, 236, 224, 0.5); background: rgba(241, 236, 224, 0.06); }
+button:active { transform: translateY(1px); }
+button.primary {
+  border-color: rgba(226, 192, 114, 0.45);
+  color: var(--hold);
+  background: linear-gradient(180deg, rgba(226, 192, 114, 0.1), rgba(226, 192, 114, 0.03));
+}
+button.primary:hover { border-color: var(--hold); }
+button.quiet { color: var(--mute); }
 button.holdbtn {
   width: auto;
   margin: 12px 0 0;
-  padding: 6px 12px;
-  letter-spacing: 0.16em;
+  padding: 6px 12px 6px 10px;
+  letter-spacing: 0.18em;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
-label.meta input { width: auto; margin-right: 6px; }
+button.holdbtn::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  background: currentColor;
+  -webkit-mask: var(--g-hold) center / contain no-repeat;
+  mask: var(--g-hold) center / contain no-repeat;
+  opacity: 0.8;
+}
+button.holdbtn:hover { color: var(--hold); border-color: rgba(226, 192, 114, 0.6); }
+button.holdbtn.second::before {
+  -webkit-mask-image: none;
+  mask-image: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  background: transparent;
+}
+button.holdbtn.second.is-seconded { color: var(--ink); border-color: rgba(241, 236, 224, 0.4); }
+button.holdbtn.second.is-seconded::before { background: currentColor; }
+label.meta { display: flex; align-items: center; gap: 8px; margin: 2px 0 10px; cursor: pointer; }
+label.meta input { width: auto; margin: 0; accent-color: var(--hold); }
 
-.narrow {
-  width: 318px;
-  padding: 16px 16px 20px;
+/* Folio list inside the dock margin */
+.folio-row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-top: 1px solid rgba(241, 236, 224, 0.05);
+  font-size: 12px;
+  color: var(--ink-2);
 }
+.folio-row:first-child { border-top: 0; }
+.folio-row .mark { font-size: 0; gap: 0; }
+.folio-row .mark::before { width: 10px; height: 10px; transform: translateY(1px); }
+.folio-row .txt { font-family: var(--serif); font-size: 13px; }
+
+/* ── Narrow surfaces (rail, folio, second) ───────────── */
+.narrow {
+  position: relative;
+  width: 318px;
+  min-height: 100vh;
+  padding: 18px 16px 22px 34px;
+}
+.narrow > .tape {
+  left: 8px;
+  width: 16px;
+  --frame: 48px;
+  opacity: 0.9;
+}
+.narrow > .tape::before {
+  background:
+    linear-gradient(180deg, transparent 0 6px, rgba(241, 236, 224, 0.16) 6px 12px, transparent 12px) center top / 6px 16px repeat-y,
+    linear-gradient(180deg, rgba(226, 192, 114, 0.12) 0 1px, transparent 1px) 0 0 / 100% var(--frame) repeat-y,
+    linear-gradient(90deg, #0e0e11, #17181c 50%, #0e0e11);
+}
+.narrow-head { margin-bottom: 14px; }
+.narrow-head .tagline { font-size: 12px; margin-top: 6px; color: var(--mute); }
 .narrow .card {
   background: transparent;
   border: 0;
   border-top: 1px solid var(--line);
+  border-radius: 0;
   margin: 0;
-  padding: 12px 0 12px 12px;
+  padding: 13px 4px 14px 14px;
 }
-.narrow .label { font-size: 16px; }
+.narrow .card::before { top: 12px; bottom: 12px; left: 0; border-radius: 0; }
+.narrow .label { font-size: 16px; line-height: 1.3; margin: 7px 0 2px; }
+.narrow .meta { font-size: 11px; }
+.narrow .empty { padding: 22px 0; }
 
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .narrow .card {
+    background: transparent;
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    border-color: transparent;
+    border-top-color: var(--glass-edge);
+  }
+  .narrow .card.hold {
+    background: linear-gradient(90deg, rgba(226, 192, 114, 0.09), transparent 80%);
+    border-top-color: rgba(226, 192, 114, 0.35);
+  }
+}
+.narrow .card.hold > .mark::after { top: 16px; right: 6px; width: 6px; height: 6px; }
+
+/* ── Caption (OBS) — clear page, one plate, no blur ──── */
+body.caption .wordmark { font-size: 9px; opacity: 0.75; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+body.caption .wordmark::after { margin-top: 6px; }
+.caption-line {
+  --tone: var(--hold);
+  position: relative;
+  margin-top: 8px;
+  padding: 10px 16px 12px 18px;
+  border: 1px solid rgba(241, 236, 224, 0.14);
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(16, 16, 20, 0.86), rgba(10, 10, 12, 0.78));
+  box-shadow: inset 0 1px 0 rgba(241, 236, 224, 0.1), 0 6px 18px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.caption-line::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--tone);
+}
 .caption-line .label {
   font-size: 22px;
-  margin-top: 4px;
+  margin: 5px 0 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+/* □ is an honest empty frame, not a plate. */
+.caption-line.is-empty {
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.caption-line.is-empty::before { display: none; }
+.caption-line .empty,
+.caption .empty {
+  padding: 2px 0;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: 0;
+  color: rgba(241, 236, 224, 0.78);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+.caption-line.is-new { animation: caption-in 420ms var(--ease-settle) both; }
+.caption-line.is-new:not(.is-empty)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(226, 192, 114, 0.16) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: sheen 900ms ease-out 120ms both;
+}
+@keyframes caption-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes sheen { to { transform: translateX(100%); } }
+
+/* ── Reduced motion: tape stops, plates appear in place ─ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

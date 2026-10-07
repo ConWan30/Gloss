@@ -3,20 +3,23 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=318" />
+  <link rel="icon" href="data:," />
   <title>Gloss · second</title>
   <link rel="stylesheet" href="/gloss.css" />
+  <script src="/gloss.js"></script>
 </head>
 <body>
   <div class="narrow">
-    <div class="wordmark"><b>Gloss</b> second</div>
-    <div id="root"><div class="empty">□</div></div>
+    <div class="tape" aria-hidden="true"></div>
+    <div class="narrow-head">
+      <div class="wordmark"><b>Gloss</b> second</div>
+      <div class="tagline">Bind to a live reading. Not a vote.</div>
+    </div>
+    <div id="root" class="stagger"><div class="empty">□</div></div>
   </div>
   <script>
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, (c) => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-      }[c]));
-    }
+    const plates = Gloss.tracker();
+    const seconded = new Set();
     async function api(path, body) {
       const res = await fetch(path, {
         method: body ? "POST" : "GET",
@@ -25,21 +28,29 @@
       });
       return res.json();
     }
-    function draw(view) {
+    function draw(view, force) {
       const root = document.getElementById("root");
-      if (!view.live || !view.live.length) {
+      const live = view.live || [];
+      const key = Gloss.keyOf(live) + [...seconded].join(",");
+      if (!plates.changed(key) && !force) return;
+      if (!live.length) {
         root.innerHTML = '<div class="empty">□ no live readings</div>';
+        plates.commit(live);
         return;
       }
-      root.innerHTML = view.live.map((r) =>
-        `<div class="card ${escapeHtml(r.mark)}">` +
-        `<div class="mark ${escapeHtml(r.mark)}">${escapeHtml(r.mark)}</div>` +
-        `<div class="label">${escapeHtml(r.label)}</div>` +
-        `<button class="holdbtn" data-id="${escapeHtml(r.id)}">Second</button>` +
-        `</div>`
-      ).join("");
+      root.innerHTML = live.map((r) => {
+        const done = seconded.has(r.id);
+        const btn = `<button class="holdbtn second${done ? " is-seconded" : ""}" data-id="${Gloss.esc(r.id)}">${done ? "Seconded" : "Second"}</button>`;
+        return Gloss.slip(r, plates.motion(r), btn);
+      }).join("");
+      plates.commit(live);
       root.querySelectorAll("button[data-id]").forEach((btn) => {
-        btn.onclick = async () => draw(await api("/v1/second", { id: btn.getAttribute("data-id"), user: "viewer" }));
+        btn.onclick = async () => {
+          const id = btn.getAttribute("data-id");
+          const view = await api("/v1/second", { id, user: "viewer" });
+          seconded.add(id);
+          draw(view);
+        };
       });
     }
     async function tick() { draw(await api("/v1/rail")); }
