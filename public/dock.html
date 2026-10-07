@@ -3,41 +3,76 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:," />
   <title>Gloss · dock</title>
   <link rel="stylesheet" href="/gloss.css" />
+  <script src="/gloss.js"></script>
 </head>
 <body>
   <header class="mast">
-    <div class="wordmark"><b>Gloss</b> dock</div>
-    <div style="margin-top:10px"><span id="mode">fixture</span> · <span id="channel">local</span> · <span id="cite">□</span></div>
+    <div class="mast-id">
+      <div class="wordmark"><b>Gloss</b> dock</div>
+      <div class="tagline">Marginal readings of the live tape.</div>
+    </div>
+    <div class="chips">
+      <span class="chip">judge <span id="mode">fixture</span></span>
+      <span class="chip">channel <span id="channel">local</span></span>
+      <span class="chip cite">glass <span id="cite">□</span></span>
+    </div>
   </header>
   <main class="shell">
-    <section class="stage" id="live"></section>
+    <section class="stage" aria-label="Live readings">
+      <div class="tape" aria-hidden="true"></div>
+      <div class="window-gate" id="gate" aria-hidden="true">
+        <div class="gate-label">window<b id="gatefacts">no facts</b></div>
+      </div>
+      <div class="stage-head">
+        <h1>Live readings</h1>
+        <span class="meta" id="count">0 of 3</span>
+      </div>
+      <div id="live" class="stagger"></div>
+    </section>
     <aside class="margin">
-      <h2>Line</h2>
-      <input id="user" value="chat" />
-      <textarea id="text" rows="4" placeholder="one allegation, or a burst — one line each"></textarea>
-      <button id="send">Pulse</button>
-      <button id="scout">Scout</button>
-      <h2>Window facts</h2>
-      <textarea id="facts" rows="3" placeholder="empty = no Bound"></textarea>
-      <input id="utter" placeholder="streamer utterance" />
-      <label class="meta"><input id="glass" type="checkbox" /> Margin Glass</label>
-      <input id="clock" placeholder="clock_ns" />
-      <input id="frame" placeholder="frame_seq" />
-      <button id="window">Tap window</button>
-      <button id="close">Close session</button>
-      <button id="xtape">X tape</button>
-      <button id="citeq">Cite Q</button>
-      <button id="fresh">New session</button>
-      <h2>Folio</h2>
-      <div id="folio"></div>
+      <div class="panel">
+        <h2>Line</h2>
+        <input id="user" value="chat" aria-label="user" />
+        <textarea id="text" rows="4" placeholder="one allegation, or a burst — one line each"></textarea>
+        <div class="row">
+          <button id="send" class="primary">Pulse</button>
+          <button id="scout">Scout</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Window facts</h2>
+        <textarea id="facts" rows="3" placeholder="empty = no Bound"></textarea>
+        <input id="utter" placeholder="streamer utterance" />
+        <label class="meta"><input id="glass" type="checkbox" /> Margin Glass</label>
+        <div class="row">
+          <input id="clock" class="mono" placeholder="clock_ns" />
+          <input id="frame" class="mono" placeholder="frame_seq" />
+        </div>
+        <button id="window" class="primary">Tap window</button>
+      </div>
+      <div class="panel">
+        <h2>Session</h2>
+        <div class="row">
+          <button id="xtape">X tape</button>
+          <button id="citeq">Cite Q</button>
+          <button id="close" class="quiet">Close session</button>
+          <button id="fresh" class="quiet">New session</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Folio</h2>
+        <div id="folio"></div>
+      </div>
     </aside>
   </main>
   <footer class="mast" id="foot">Three live readings. No crown. Tape is the text.</footer>
   <script>
     const liveEl = document.getElementById("live");
     const folioEl = document.getElementById("folio");
+    const plates = Gloss.tracker();
     async function api(path, body) {
       const res = await fetch(path, {
         method: body ? "POST" : "GET",
@@ -48,20 +83,17 @@
       if (!res.ok) throw new Error(view.error || res.status);
       return view;
     }
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, (c) => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-      }[c]));
-    }
+    const escapeHtml = Gloss.esc;
     function card(r) {
       const pct = Math.round((r.concentration || 0) * 100);
       const hold = r.mark === "hold"
         ? ""
         : `<button class="holdbtn" data-hold="${escapeHtml(r.id)}">Hold</button>`;
-      return `<article class="card ${escapeHtml(r.mark)}">
+      return `<article class="card ${escapeHtml(r.mark)}${plates.motion(r)}" data-id="${escapeHtml(r.id)}">
+        <i class="press" aria-hidden="true"></i>
         <div class="mark ${escapeHtml(r.mark)}">${escapeHtml(r.mark)}</div>
         <div class="label">${escapeHtml(r.label)}</div>
-        <div class="meta">${escapeHtml(r.type)}${r.echoOf ? " · echo" : ""}</div>
+        <div class="meta">${escapeHtml(r.type)}${r.echoOf ? '<span class="sep">·</span>echo' : ""}</div>
         <div class="bar"><i style="width:${pct}%"></i></div>
         ${hold}
       </article>`;
@@ -80,15 +112,24 @@
         const scout = view.scouted != null ? ` · scouted ${view.scouted}` : "";
         foot.textContent = `${g} · ${c} · ${view.live.length} live${scout}`;
       }
-      liveEl.innerHTML = view.live.length
-        ? view.live.map(card).join("")
-        : '<div class="empty">□ no live readings</div>';
+      const facts = view.window && String(view.window.facts || "").trim();
+      const secs = view.window ? Math.round((view.window.lengthMs || 0) / 1000) : 0;
+      document.getElementById("gate").classList.toggle("has-facts", !!facts);
+      document.getElementById("gatefacts").textContent = (secs ? `${secs}s · ` : "") + (facts ? "facts" : "no facts");
+      document.getElementById("count").textContent = `${view.live.length} of 3`;
+      if (plates.changed(Gloss.keyOf(view.live))) {
+        const vacant = Math.max(0, 3 - view.live.length);
+        liveEl.innerHTML = view.live.length
+          ? view.live.map(card).join("") + '<div class="slot">vacant</div>'.repeat(vacant)
+          : '<div class="empty">□ no live readings</div>';
+        plates.commit(view.live);
+        liveEl.querySelectorAll("[data-hold]").forEach((btn) => {
+          btn.onclick = async () => render(await api("/v1/hold", { id: btn.getAttribute("data-hold") }));
+        });
+      }
       folioEl.innerHTML = view.folio.slice(-6).reverse().map((r) =>
-        `<div class="meta">${escapeHtml(r.mark)} · ${escapeHtml(r.label)}</div>`
+        `<div class="folio-row"><span class="mark ${escapeHtml(r.mark)}">${escapeHtml(r.mark)}</span><span class="txt">${escapeHtml(r.label)}</span></div>`
       ).join("") || '<div class="meta">empty</div>';
-      liveEl.querySelectorAll("[data-hold]").forEach((btn) => {
-        btn.onclick = async () => render(await api("/v1/hold", { id: btn.getAttribute("data-hold") }));
-      });
     }
     async function refresh() { render(await api("/v1/rail")); }
     document.getElementById("send").onclick = async () => {
